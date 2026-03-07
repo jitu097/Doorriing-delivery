@@ -1,0 +1,14 @@
+.history-page {}
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-total {
+  text-align: right;
+}
+.history-total__label {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.history-total__value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--success);
+}

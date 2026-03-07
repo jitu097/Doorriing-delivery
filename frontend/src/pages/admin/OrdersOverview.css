@@ -1,0 +1,9 @@
+.orders-page {}
+.order-id {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  background: var(--gray-100);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text);
+}

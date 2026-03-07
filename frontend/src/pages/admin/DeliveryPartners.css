@@ -1,0 +1,4 @@
+.dp-page {}
+.dp-list { display: flex; flex-direction: column; gap: 10px; }
+.partner-form { display: flex; flex-direction: column; gap: 16px; }
+.partner-form__footer { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }

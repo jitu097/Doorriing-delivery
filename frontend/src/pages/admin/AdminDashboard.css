@@ -1,0 +1,6 @@
+.dashboard-page {}
+.page-subtitle {
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}

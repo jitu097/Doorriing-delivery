@@ -1,0 +1,15 @@
+.shops-page {}
+.shops-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+.page-count {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  background: var(--gray-100);
+  padding: 4px 10px;
+  border-radius: 100px;
+  align-self: center;
+}
+.search-input { max-width: 320px; }

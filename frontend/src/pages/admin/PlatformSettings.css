@@ -1,0 +1,19 @@
+.settings-page {}
+.settings-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+}
+.settings-form { display: flex; flex-direction: column; gap: 32px; }
+.settings-section { display: flex; flex-direction: column; gap: 18px; }
+.settings-section__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.form-hint { font-size: 0.8125rem; color: var(--text-muted); margin-top: 4px; }
+.settings-footer { display: flex; justify-content: flex-end; padding-top: 8px; }

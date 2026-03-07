@@ -1,0 +1,68 @@
+.navbar {
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  box-shadow: var(--shadow-xs);
+}
+
+.navbar__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0;
+}
+
+.navbar__right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar__avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.navbar__email {
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.navbar__logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+  font-family: inherit;
+}
+.navbar__logout:hover { background: var(--danger-light); border-color: var(--danger); color: #991b1b; }
