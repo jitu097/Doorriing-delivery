@@ -47,6 +47,7 @@ app.use(cors({
   },
   credentials: true,
 }));
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -62,5 +63,6 @@ app.use('/api/shops',    shopRoutes);
 app.use('/api/platform', platformRoutes); // public — no auth
 
 app.use(errorHandler);
+
 
 module.exports = app;
