@@ -18,8 +18,6 @@ const app = express();
 
 const PRODUCTION_ORIGINS = [
   'https://delivery.doorriing.com',
-  'https://admin.doorriing.com',
-  'https://seller.doorriing.com',
 ];
 
 const DEV_ORIGINS = [
