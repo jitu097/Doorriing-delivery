@@ -1,3 +1,4 @@
+import { InstallButton } from '../common/InstallButton';
 import './Navbar.css';
 
 export const Navbar = ({ title, onLogout, user, onMenuToggle }) => (
@@ -19,6 +20,7 @@ export const Navbar = ({ title, onLogout, user, onMenuToggle }) => (
           <span className="navbar__email">{user.email}</span>
         </div>
       )}
+      <InstallButton />
       <button className="navbar__logout" onClick={onLogout}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16">
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>

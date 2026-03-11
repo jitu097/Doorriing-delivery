@@ -1,0 +1,9 @@
+# Cloudflare Pages _headers
+# Ensures service worker is never served from cache so updates are delivered
+# immediately. All other assets use Cloudflare's default caching behaviour.
+
+/sw.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/workbox-*.js
+  Cache-Control: no-store, no-cache, must-revalidate

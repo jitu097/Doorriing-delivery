@@ -2,10 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Responsive viewport; viewport-fit=cover fills iPhone notch area -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Browser/taskbar chrome colour -->
     <meta name="theme-color" content="#FF6600" />
+
+    <!-- App description (used by search engines and install prompts) -->
+    <meta name="description" content="Doorriing Admin Panel and Delivery Partner Dashboard" />
+
+    <!-- ── iOS / Safari PWA support ──────────────────────────────────── -->
+    <!-- Enables full-screen mode when launched from iOS home screen     -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- "default" keeps the status bar white text on orange background  -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Doorriing" />
+    <!-- Home screen icon for Safari "Add to Home Screen"                -->
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- ── Android Chrome (legacy) ───────────────────────────────────── -->
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Favicon and fallback icon -->
     <link rel="icon" type="image/png" href="/Doorriing.png" />
-    <title>Doorriing Admin & Delivery</title>
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+
+    <!-- NOTE: vite-plugin-pwa auto-injects <link rel="manifest"> here  -->
+    <title>Doorriing Admin &amp; Delivery</title>
   </head>
   <body>
     <div id="root"></div>

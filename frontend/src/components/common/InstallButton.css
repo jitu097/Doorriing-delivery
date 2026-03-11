@@ -1,0 +1,37 @@
+.install-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t);
+  font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.install-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.install-btn__icon {
+  flex-shrink: 0;
+}
+
+/* On small screens hide the text — keep the icon-only button */
+@media (max-width: 767px) {
+  .install-btn__label {
+    display: none;
+  }
+
+  .install-btn {
+    padding: 7px 10px;
+  }
+}
