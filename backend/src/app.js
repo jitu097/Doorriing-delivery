@@ -16,10 +16,30 @@ initSupabase();
 
 const app = express();
 
-const allowedOrigins = env.CORS_ORIGINS ? env.CORS_ORIGINS.split(',').map(o => o.trim()) : null;
+const PRODUCTION_ORIGINS = [
+  'https://delivery.doorriing.com',
+];
+
+const DEV_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5000',
+];
+
+const allowedOrigins = env.CORS_ORIGINS
+  ? env.CORS_ORIGINS.split(',').map(o => o.trim())
+  : [...DEV_ORIGINS, ...PRODUCTION_ORIGINS];
 
 app.use(helmet());
-app.use(cors({ origin: allowedOrigins || true, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
