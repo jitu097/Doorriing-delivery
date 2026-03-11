@@ -1,7 +1,7 @@
 {
-  "name": "bazarse-backend",
+  "name": "doorriing-backend",
   "version": "1.0.0",
-  "description": "REST API for the Bazarse admin and delivery platform",
+  "description": "REST API for the Doorriing admin and delivery platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -37,8 +37,10 @@ const schemas = {
   }),
 
   updatePlatformSettings: Joi.object({
-    delivery_charges: Joi.number().min(0).optional(),
-    convenience_fee: Joi.number().min(0).optional()
+    min_order_amount:   Joi.number().min(0).optional(),
+    delivery_fee:       Joi.number().min(0).optional(),
+    convenience_fee:    Joi.number().min(0).optional(),
+    free_delivery_above: Joi.number().min(0).optional()
   }).min(1),
 
   setBlockStatus: Joi.object({
@@ -47,6 +49,10 @@ const schemas = {
 
   setActiveStatus: Joi.object({
     is_active: Joi.boolean().required()
+  }),
+
+  rejectWithdrawal: Joi.object({
+    admin_note: Joi.string().max(500).allow('', null).optional()
   })
 };
 

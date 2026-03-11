@@ -1,0 +1,378 @@
+.sd {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 28px;
+  max-width: 1100px;
+}
+
+/* ── Back button ── */
+.sd__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color var(--t);
+  width: fit-content;
+}
+.sd__back:hover { color: var(--primary); }
+
+/* ── Header card ── */
+.sd__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  flex-wrap: wrap;
+}
+
+.sd__header-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sd__header-info { flex: 1; min-width: 0; }
+.sd__header-name {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 4px;
+}
+.sd__header-sub {
+  font-size: 0.875rem;
+  color: var(--text-2);
+  margin: 0;
+}
+
+.sd__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Section title ── */
+.sd__section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 16px;
+}
+
+/* ── Info card ── */
+.sd__info-card { padding: 20px 24px; }
+
+.sd__info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.sd__info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sd__info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.sd__info-value {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+/* ── Analytics grid ── */
+.sd__analytics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.sd__stat-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 0.2s;
+}
+.sd__stat-card:hover { box-shadow: var(--shadow-sm); }
+
+.sd__stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sd__stat-icon svg { width: 20px; height: 20px; }
+
+/* Stat card colour variants */
+.sd__stat-card--blue   .sd__stat-icon { background: var(--info-light);    color: var(--info);    }
+.sd__stat-card--orange .sd__stat-icon { background: var(--primary-light);  color: var(--primary); }
+.sd__stat-card--green  .sd__stat-icon { background: var(--success-light);  color: var(--success); }
+.sd__stat-card--red    .sd__stat-icon { background: var(--danger-light);   color: var(--danger);  }
+.sd__stat-card--purple .sd__stat-icon { background: var(--purple-light);   color: var(--purple);  }
+
+.sd__stat-body { min-width: 0; }
+.sd__stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sd__stat-label {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ── Orders card ── */
+.sd__orders-card { padding: 20px 24px; }
+
+.sd__orders-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.sd__orders-header .sd__section-title { margin-bottom: 0; }
+.sd__orders-count {
+  font-size: 0.8125rem;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+/* ── Table ── */
+.sd__table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.sd__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.sd__table thead { background: var(--bg2); }
+.sd__table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.sd__table td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-soft);
+  color: var(--text-1);
+  vertical-align: middle;
+}
+.sd__table tbody tr:hover { background: var(--bg); }
+
+.sd__order-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8125rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+.sd__date {
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.sd__load-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .sd { padding: 16px; gap: 14px; }
+  .sd__analytics { grid-template-columns: repeat(2, 1fr); }
+  .sd__header-name { font-size: 1.125rem; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   Withdrawal Requests Section
+   ════════════════════════════════════════════════════════════ */
+
+.sd__wd-card { padding: 20px 24px; }
+
+/* Error banner inside the card */
+.sd__wd-error {
+  background: var(--danger-light);
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+/* Amount column — bold orange */
+.sd__wd-amount {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Method pill */
+.sd__wd-method {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sd__wd-method--upi  { background: #e8f4fd; color: #1a73e8; }
+.sd__wd-method--bank { background: #e6f4ea; color: #137333; }
+
+/* Account cell — monospace */
+.sd__wd-account {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8125rem;
+  color: var(--text-2);
+}
+
+/* Status badges for withdrawal */
+.badge--wd-pending  { background: #fff3cd; color: #856404; }
+.badge--wd-approved { background: #d1e7dd; color: #0f5132; }
+.badge--wd-rejected { background: #f8d7da; color: #842029; }
+
+/* Action buttons in the table */
+.sd__wd-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.sd__wd-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.sd__wd-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.sd__wd-btn:not(:disabled):hover { opacity: 0.85; }
+.sd__wd-btn:not(:disabled):active { transform: scale(0.96); }
+
+.sd__wd-btn--view    { background: var(--bg2);         color: var(--text-2); }
+.sd__wd-btn--approve { background: var(--success);      color: #fff; }
+.sd__wd-btn--reject  { background: var(--danger);       color: #fff; }
+
+/* ── Detail modal body ── */
+.sd__wd-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sd__wd-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.875rem;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.sd__wd-detail-row:last-of-type { border-bottom: none; }
+.sd__wd-detail-row > span:first-child {
+  color: var(--text-3);
+  font-weight: 500;
+  min-width: 120px;
+}
+.sd__wd-detail-row > strong {
+  color: var(--text-1);
+  text-align: right;
+  word-break: break-all;
+}
+
+.sd__wd-detail-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+/* ── Reject modal form ── */
+.sd__wd-reject-form { display: flex; flex-direction: column; gap: 16px; }
+
+.sd__wd-reject-desc {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.sd__wd-reject-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.sd__wd-reject-textarea {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--text-1);
+  background: var(--bg);
+  resize: vertical;
+  transition: border-color 0.15s;
+  min-height: 72px;
+}
+.sd__wd-reject-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-focus);
+}
+

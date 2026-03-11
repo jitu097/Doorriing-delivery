@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { adminService } from '../../services/adminService';
 import { Button } from '../common/Button';
 import './DeliveryPartnerCard.css';
 
-export const DeliveryPartnerCard = ({ partner: initialPartner }) => {
+export const DeliveryPartnerCard = memo(({ partner: initialPartner }) => {
   const [partner, setPartner] = useState(initialPartner);
   const [busy, setBusy] = useState(false);
 
-  const toggleStatus = async () => {
+  const toggleStatus = useCallback(async () => {
     setBusy(true);
     try {
       await adminService.togglePartnerStatus(partner.id, !partner.is_active);
@@ -15,7 +15,7 @@ export const DeliveryPartnerCard = ({ partner: initialPartner }) => {
     } finally {
       setBusy(false);
     }
-  };
+  }, [partner]);
 
   const initial = (partner.name || 'D').charAt(0).toUpperCase();
 
@@ -26,6 +26,11 @@ export const DeliveryPartnerCard = ({ partner: initialPartner }) => {
         <h4 className="dp-card__name">{partner.name}</h4>
         <p className="dp-card__meta">{partner.email}</p>
         {partner.phone && <p className="dp-card__meta">{partner.phone}</p>}
+        {partner.vehicle_type && (
+          <p className="dp-card__meta dp-card__vehicle">
+            {partner.vehicle_type.charAt(0).toUpperCase() + partner.vehicle_type.slice(1)}
+          </p>
+        )}
       </div>
       <div className="dp-card__stats">
         <div className="dp-card__stat">
@@ -52,4 +57,4 @@ export const DeliveryPartnerCard = ({ partner: initialPartner }) => {
       </div>
     </div>
   );
-};
+});

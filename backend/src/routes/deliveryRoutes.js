@@ -31,4 +31,16 @@ router.patch(
 // GET /api/delivery/history  — completed deliveries for this partner
 router.get('/history', deliveryController.getDeliveryHistory);
 
+// POST /api/delivery/orders/:orderId/accept
+router.post('/orders/:orderId/accept', deliveryController.acceptOrder);
+
+// POST /api/delivery/orders/:orderId/picked-up
+router.post('/orders/:orderId/picked-up', deliveryController.pickedUp);
+
+// POST /api/delivery/orders/:orderId/out-for-delivery
+router.post('/orders/:orderId/out-for-delivery', deliveryController.outForDelivery);
+
+// POST /api/delivery/orders/:orderId/delivered
+router.post('/orders/:orderId/delivered', deliveryController.delivered);
+
 module.exports = router;

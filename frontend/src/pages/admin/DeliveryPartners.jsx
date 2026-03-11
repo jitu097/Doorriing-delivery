@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../../services/adminService';
 import { DeliveryPartnerCard } from '../../components/admin/DeliveryPartnerCard';
 import { Modal } from '../../components/common/Modal';
@@ -6,7 +6,7 @@ import { Button } from '../../components/common/Button';
 import { Loader } from '../../components/common/Loader';
 import './DeliveryPartners.css';
 
-const EMPTY_FORM = { name: '', email: '', phone: '', password: '' };
+const EMPTY_FORM = { name: '', email: '', phone: '', password: '', vehicle_type: '' };
 
 export const DeliveryPartners = () => {
   const [partners, setPartners] = useState([]);
@@ -17,13 +17,13 @@ export const DeliveryPartners = () => {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     setIsLoading(true);
     adminService.getDeliveryPartners()
       .then(setPartners)
       .catch((err) => setError(err.message || 'Failed to load partners'))
       .finally(() => setIsLoading(false));
-  };
+  }, []);
 
   useEffect(load, []);
 
@@ -90,6 +90,16 @@ export const DeliveryPartners = () => {
           <div className="form-group">
             <label className="form-label">Password</label>
             <input className="form-input" type="password" required value={form.password} onChange={field('password')} placeholder="Temporary password" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Vehicle Type</label>
+            <select className="form-input" required value={form.vehicle_type} onChange={field('vehicle_type')}>
+              <option value="" disabled>Select vehicle type</option>
+              <option value="bike">Bike</option>
+              <option value="scooter">Scooter</option>
+              <option value="cycle">Cycle</option>
+              <option value="car">Car</option>
+            </select>
           </div>
           <div className="partner-form__footer">
             <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>

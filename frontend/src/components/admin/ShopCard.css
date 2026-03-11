@@ -3,9 +3,11 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 20px;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.15s;
+  cursor: pointer;
 }
-.shop-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+.shop-card:hover { box-shadow: 0 4px 20px rgba(255,102,0,0.12); transform: translateY(-2px); border-color: var(--primary); }
+.shop-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .shop-card--blocked { opacity: 0.72; border-color: var(--danger-light); background: #fff8f8; }
 
 .shop-card__header {

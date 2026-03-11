@@ -10,7 +10,7 @@ const getOrders = async ({ status, shopId, page = 1, limit = 20 } = {}) => {
 
   let query = supabase
     .from('orders')
-    .select('*, shops(id, shop_name, city)', { count: 'exact' })
+    .select('*, shops(id, name, city), customers(id, full_name, email)', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to);
 
@@ -28,7 +28,7 @@ const getOrderById = async (orderId) => {
   const { data, error } = await supabase
     .from('orders')
     .select(
-      '*, shops(id, shop_name, city), order_delivery_assignments(id, status, accepted_at, picked_up_at, delivered_at, delivery_partners!delivery_partner_id(id, name, phone))'
+      '*, shops(id, name, city), customers(id, full_name, email, phone), order_delivery_assignments(id, status, accepted_at, picked_up_at, delivered_at, delivery_partners!delivery_partner_id(id, name, phone))'
     )
     .eq('id', orderId)
     .single();

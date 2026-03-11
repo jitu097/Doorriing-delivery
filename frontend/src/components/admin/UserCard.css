@@ -8,27 +8,28 @@
   gap: 16px;
   transition: box-shadow 0.2s;
 }
-.user-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-.user-card--blocked { opacity: 0.7; background: #fff8f8; border-color: var(--danger-light); }
+.user-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+.user-card--blocked { opacity: 0.75; background: #fff8f8; border-color: #ffd0d0; }
 
 .user-card__avatar {
-  width: 42px; height: 42px;
+  width: 44px; height: 44px;
   border-radius: 50%;
-  background: var(--info-light);
-  color: var(--info);
+  background: #fff3e0;
+  color: var(--primary);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.user-card--blocked .user-card__avatar { background: var(--danger-light); color: var(--danger); }
+.user-card--blocked .user-card__avatar { background: #ffe0e0; color: var(--danger); }
 
 .user-card__info { flex: 1; min-width: 0; }
-.user-card__name { font-weight: 600; font-size: 0.9375rem; color: var(--text); }
-.user-card__email { font-size: 0.8125rem; color: var(--text-muted); margin-top: 2px; }
-.user-card__meta { font-size: 0.75rem; color: var(--text-muted); }
+.user-card__name    { font-weight: 600; font-size: 0.9375rem; color: var(--text); margin: 0; }
+.user-card__email   { font-size: 0.8125rem; color: var(--text-muted); margin: 2px 0 0; }
+.user-card__meta    { font-size: 0.8125rem; color: var(--text-muted); margin: 2px 0 0; }
+.user-card__joined  { font-size: 0.75rem;   color: var(--text-muted); margin: 4px 0 0; }
 
 .user-card__actions {
   display: flex;
@@ -36,4 +37,29 @@
   align-items: flex-end;
   gap: 8px;
   flex-shrink: 0;
+}
+.user-card__err {
+  font-size: 0.7rem;
+  color: var(--danger);
+  margin: 0;
+  max-width: 140px;
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .user-card {
+    flex-wrap: wrap;
+  }
+
+  .user-card__actions {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .user-card__err {
+    max-width: none;
+    text-align: left;
+  }
 }

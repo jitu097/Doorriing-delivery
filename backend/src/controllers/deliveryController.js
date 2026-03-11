@@ -47,4 +47,61 @@ const getDeliveryHistory = async (req, res, next) => {
   }
 };
 
-module.exports = { login, getAssignedOrders, updateAssignmentStatus, getDeliveryHistory };
+// POST /api/delivery/orders/:orderId/accept
+const acceptOrder = async (req, res, next) => {
+  try {
+    const updated = await deliveryService.updateOrderStatus(
+      req.params.orderId, req.deliveryPartner.id, 'accepted'
+    );
+    return res.json(formatResponse(updated, 'Order accepted'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// POST /api/delivery/orders/:orderId/picked-up
+const pickedUp = async (req, res, next) => {
+  try {
+    const updated = await deliveryService.updateOrderStatus(
+      req.params.orderId, req.deliveryPartner.id, 'picked_up'
+    );
+    return res.json(formatResponse(updated, 'Order picked up'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// POST /api/delivery/orders/:orderId/out-for-delivery
+const outForDelivery = async (req, res, next) => {
+  try {
+    const updated = await deliveryService.updateOrderStatus(
+      req.params.orderId, req.deliveryPartner.id, 'out_for_delivery'
+    );
+    return res.json(formatResponse(updated, 'Out for delivery'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// POST /api/delivery/orders/:orderId/delivered
+const delivered = async (req, res, next) => {
+  try {
+    const updated = await deliveryService.updateOrderStatus(
+      req.params.orderId, req.deliveryPartner.id, 'delivered'
+    );
+    return res.json(formatResponse(updated, 'Order delivered'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = {
+  login,
+  getAssignedOrders,
+  updateAssignmentStatus,
+  getDeliveryHistory,
+  acceptOrder,
+  pickedUp,
+  outForDelivery,
+  delivered,
+};

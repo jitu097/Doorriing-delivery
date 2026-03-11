@@ -47,3 +47,26 @@
   gap: 8px;
   flex-shrink: 0;
 }
+
+@media (max-width: 600px) {
+  .dp-card {
+    flex-wrap: wrap;
+  }
+
+  .dp-card__stats {
+    width: 100%;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    justify-content: space-around;
+  }
+
+  .dp-card__actions {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+}

@@ -6,13 +6,23 @@ export const adminService = {
   getDashboard: () => apiClient.get('/admin/dashboard').then((r) => r.data.data),
 
   getShops:  ()       => apiClient.get('/admin/shops').then((r) => r.data.data),
+  getShopById:      (id)          => apiClient.get(`/admin/shops/${id}`).then((r) => r.data.data),
+  getShopAnalytics: (id)          => apiClient.get(`/admin/shops/${id}/analytics`).then((r) => r.data.data),
+  getShopOrders:    (id, params)  => apiClient.get(`/admin/shops/${id}/orders`, { params }).then((r) => r.data.data),
   getShopStats: (id)  => apiClient.get(`/admin/shops/${id}/stats`).then((r) => r.data.data),
   setShopBlock: (id, is_blocked) =>
     apiClient.patch(`/admin/shops/${id}/block`, { is_blocked }).then((r) => r.data.data),
 
-  getUsers: ()            => apiClient.get('/admin/users').then((r) => r.data.data),
-  setUserBlock: (id, is_blocked) =>
-    apiClient.patch(`/admin/users/${id}/block`, { is_blocked }).then((r) => r.data.data),
+  getShopWithdrawals: (id) =>
+    apiClient.get(`/admin/shops/${id}/withdrawals`).then((r) => r.data.data),
+  approveWithdrawal: (withdrawId) =>
+    apiClient.post(`/admin/withdrawals/${withdrawId}/approve`).then((r) => r.data.data),
+  rejectWithdrawal: (withdrawId, admin_note = '') =>
+    apiClient.post(`/admin/withdrawals/${withdrawId}/reject`, { admin_note }).then((r) => r.data.data),
+
+  getUsers:    ()  => apiClient.get('/admin/users').then((r) => r.data.data),
+  blockUser:   (id) => apiClient.patch(`/admin/users/${id}/block`).then((r) => r.data.data),
+  unblockUser: (id) => apiClient.patch(`/admin/users/${id}/unblock`).then((r) => r.data.data),
 
   getOrderAnalytics: () => apiClient.get('/admin/orders/analytics').then((r) => r.data.data),
   getOrders: (params)    => apiClient.get('/admin/orders', { params }).then((r) => r.data.data?.orders ?? r.data.data ?? []),

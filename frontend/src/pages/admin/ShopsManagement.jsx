@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { adminService } from '../../services/adminService';
 import { ShopCard } from '../../components/admin/ShopCard';
 import { Loader } from '../../components/common/Loader';
@@ -17,9 +17,13 @@ export const ShopsManagement = () => {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const filtered = shops.filter((s) =>
-    !search || s.name?.toLowerCase().includes(search.toLowerCase()) || s.city?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    if (!search) return shops;
+    const q = search.toLowerCase();
+    return shops.filter((s) =>
+      s.shop_name?.toLowerCase().includes(q) || s.city?.toLowerCase().includes(q)
+    );
+  }, [shops, search]);
 
   return (
     <div className="shops-page">

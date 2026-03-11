@@ -1,7 +1,8 @@
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg);
+  overflow: hidden;
 }
 
 .dashboard-layout__main {
@@ -16,4 +17,29 @@
   flex: 1;
   padding: 28px 32px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Overlay (mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 29;
+}
+
+@media (max-width: 767px) {
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .dashboard-layout__content {
+    padding: 20px 16px;
+  }
+
+  /* Must come AFTER the shorthand above so it wins */
+  .dashboard-layout__content--delivery {
+    padding-bottom: 88px;
+  }
 }

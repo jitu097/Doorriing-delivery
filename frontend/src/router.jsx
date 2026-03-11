@@ -1,21 +1,31 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { DashboardLayout } from './components/layout/DashboardLayout';
-import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { ShopsManagement } from './pages/admin/ShopsManagement';
-import { UsersManagement } from './pages/admin/UsersManagement';
-import { OrdersOverview } from './pages/admin/OrdersOverview';
-import { DeliveryPartners } from './pages/admin/DeliveryPartners';
-import { PlatformSettings } from './pages/admin/PlatformSettings';
-import { AdminLogin } from './pages/auth/AdminLogin';
-import { DeliveryLogin } from './pages/auth/DeliveryLogin';
-import { DeliveryDashboard } from './pages/delivery/DeliveryDashboard';
-import { AssignedOrders } from './pages/delivery/AssignedOrders';
-import { ActiveDeliveries } from './pages/delivery/ActiveDeliveries';
-import { DeliveryHistory } from './pages/delivery/DeliveryHistory';
+import { Loader } from './components/common/Loader';
 import { ROUTES } from './config/constants';
 import { useAdminAuth } from './hooks/useAdminAuth';
 import { useDeliveryAuth } from './hooks/useDeliveryAuth';
 import './router.css';
+
+// Lazy-loaded admin pages
+const AdminDashboard   = lazy(() => import('./pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
+const ShopsManagement  = lazy(() => import('./pages/admin/ShopsManagement').then((m) => ({ default: m.ShopsManagement })));
+const AdminShopDetails = lazy(() => import('./pages/admin/AdminShopDetails').then((m) => ({ default: m.AdminShopDetails })));
+const UsersManagement  = lazy(() => import('./pages/admin/UsersManagement').then((m) => ({ default: m.UsersManagement })));
+const OrdersOverview   = lazy(() => import('./pages/admin/OrdersOverview').then((m) => ({ default: m.OrdersOverview })));
+const DeliveryPartners = lazy(() => import('./pages/admin/DeliveryPartners').then((m) => ({ default: m.DeliveryPartners })));
+const PlatformSettings = lazy(() => import('./pages/admin/PlatformSettings').then((m) => ({ default: m.PlatformSettings })));
+
+// Lazy-loaded delivery pages
+const DeliveryDashboard = lazy(() => import('./pages/delivery/DeliveryDashboard').then((m) => ({ default: m.DeliveryDashboard })));
+const AssignedOrders    = lazy(() => import('./pages/delivery/AssignedOrders').then((m) => ({ default: m.AssignedOrders })));
+const ActiveDeliveries  = lazy(() => import('./pages/delivery/ActiveDeliveries').then((m) => ({ default: m.ActiveDeliveries })));
+const DeliveryHistory   = lazy(() => import('./pages/delivery/DeliveryHistory').then((m) => ({ default: m.DeliveryHistory })));
+
+// Lazy-loaded auth
+const Login = lazy(() => import('./pages/auth/Login').then((m) => ({ default: m.Login })));
+
+const PageLoader = () => <Loader label="Loading..." />;
 
 const adminLinks = [
   { to: ROUTES.admin.dashboard,         label: 'Dashboard' },
@@ -23,7 +33,7 @@ const adminLinks = [
   { to: ROUTES.admin.users,             label: 'Users' },
   { to: ROUTES.admin.orders,            label: 'Orders' },
   { to: ROUTES.admin.deliveryPartners,  label: 'Delivery Partners' },
-  { to: ROUTES.admin.settings,          label: 'Settings' }
+  { to: ROUTES.admin.settings,          label: 'Platform Settings' }
 ];
 
 const deliveryLinks = [
@@ -36,7 +46,7 @@ const deliveryLinks = [
 const AdminRoute = () => {
   const { adminUser, logout } = useAdminAuth();
   if (!adminUser) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/login" replace />;
   }
   return <DashboardLayout title="Admin" links={adminLinks} onLogout={logout} user={adminUser} />;
 };
@@ -44,26 +54,33 @@ const AdminRoute = () => {
 const DeliveryRoute = () => {
   const { courier, logout } = useDeliveryAuth();
   if (!courier) {
-    return <Navigate to="/delivery/login" replace />;
+    return <Navigate to="/login" replace />;
   }
   return <DashboardLayout title="Delivery" links={deliveryLinks} onLogout={logout} user={courier} />;
 };
 
 export const router = createBrowserRouter([
-  { path: '/', element: <Navigate to="/admin/login" replace /> },
-  { path: '/admin/login', element: <AdminLogin /> },
-  { path: '/delivery/login', element: <DeliveryLogin /> },
+  { path: '/', element: <Navigate to="/login" replace /> },
+  {
+    path: '/login',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <Login />
+      </Suspense>
+    )
+  },
   {
     path: '/admin',
     element: <AdminRoute />,
     children: [
       { index: true, element: <Navigate to={ROUTES.admin.dashboard} replace /> },
-      { path: 'dashboard', element: <AdminDashboard /> },
-      { path: 'shops', element: <ShopsManagement /> },
-      { path: 'users', element: <UsersManagement /> },
-      { path: 'orders', element: <OrdersOverview /> },
-      { path: 'delivery-partners', element: <DeliveryPartners /> },
-      { path: 'settings', element: <PlatformSettings /> }
+      { path: 'dashboard',          element: <Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense> },
+      { path: 'shops',              element: <Suspense fallback={<PageLoader />}><ShopsManagement /></Suspense> },
+      { path: 'shops/:shopId',      element: <Suspense fallback={<PageLoader />}><AdminShopDetails /></Suspense> },
+      { path: 'users',              element: <Suspense fallback={<PageLoader />}><UsersManagement /></Suspense> },
+      { path: 'orders',             element: <Suspense fallback={<PageLoader />}><OrdersOverview /></Suspense> },
+      { path: 'delivery-partners',  element: <Suspense fallback={<PageLoader />}><DeliveryPartners /></Suspense> },
+      { path: 'settings',           element: <Suspense fallback={<PageLoader />}><PlatformSettings /></Suspense> }
     ]
   },
   {
@@ -71,10 +88,10 @@ export const router = createBrowserRouter([
     element: <DeliveryRoute />,
     children: [
       { index: true, element: <Navigate to={ROUTES.delivery.dashboard} replace /> },
-      { path: 'dashboard', element: <DeliveryDashboard /> },
-      { path: 'assigned', element: <AssignedOrders /> },
-      { path: 'active', element: <ActiveDeliveries /> },
-      { path: 'history', element: <DeliveryHistory /> }
+      { path: 'dashboard', element: <Suspense fallback={<PageLoader />}><DeliveryDashboard /></Suspense> },
+      { path: 'assigned',  element: <Suspense fallback={<PageLoader />}><AssignedOrders /></Suspense> },
+      { path: 'active',    element: <Suspense fallback={<PageLoader />}><ActiveDeliveries /></Suspense> },
+      { path: 'history',   element: <Suspense fallback={<PageLoader />}><DeliveryHistory /></Suspense> }
     ]
   }
 ]);

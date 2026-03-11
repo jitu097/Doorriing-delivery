@@ -24,12 +24,22 @@ router.get('/dashboard', adminController.getDashboardStats);
 
 // Shops
 router.get('/shops', adminController.getShops);
-router.get('/shops/:shopId/stats', adminController.getShopStats);
+// Specific sub-routes BEFORE :shopId to prevent shadowing
+router.get('/shops/:shopId/analytics',   adminController.getShopAnalytics);
+router.get('/shops/:shopId/orders',      adminController.getShopOrders);
+router.get('/shops/:shopId/stats',       adminController.getShopStats);
+router.get('/shops/:shopId/withdrawals', adminController.getShopWithdrawals);
+router.get('/shops/:shopId',             adminController.getShopById);
 router.patch('/shops/:shopId/block', validateBody('setBlockStatus'), adminController.setShopBlockStatus);
+
+// Withdrawal actions (approve / reject)
+router.post('/withdrawals/:withdrawId/approve', adminController.approveWithdrawal);
+router.post('/withdrawals/:withdrawId/reject',  validateBody('rejectWithdrawal'), adminController.rejectWithdrawal);
 
 // Users
 router.get('/users', adminController.getUsers);
-router.patch('/users/:userId/block', validateBody('setBlockStatus'), adminController.setUserBlockStatus);
+router.patch('/users/:userId/block',   adminController.blockUser);
+router.patch('/users/:userId/unblock', adminController.unblockUser);
 
 // Orders — analytics route MUST be defined before /:orderId to avoid shadowing
 router.get('/orders/analytics', adminController.getOrderAnalytics);

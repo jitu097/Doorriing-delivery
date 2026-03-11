@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useOrders } from '../../hooks/useOrders';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { formatDate } from '../../utils/formatDate';
@@ -8,15 +8,21 @@ import './OrdersOverview.css';
 const STATUS_TABS = ['all', 'pending', 'confirmed', 'out_for_delivery', 'delivered', 'cancelled'];
 
 export const OrdersOverview = () => {
-  const { orders, isLoading } = useOrders();
+  const { orders, isLoading, error } = useOrders();
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
 
-  const filtered = orders.filter((o) => {
-    const matchTab = activeTab === 'all' || o.status === activeTab;
-    const matchSearch = !search || o.id?.includes(search) || o.shop_name?.toLowerCase().includes(search.toLowerCase());
-    return matchTab && matchSearch;
-  });
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return orders.filter((o) => {
+      const matchTab = activeTab === 'all' || o.status === activeTab;
+      const matchSearch = !q ||
+        o.id?.toLowerCase().includes(q) ||
+        o.shops?.name?.toLowerCase().includes(q) ||
+        o.customers?.full_name?.toLowerCase().includes(q);
+      return matchTab && matchSearch;
+    });
+  }, [orders, activeTab, search]);
 
   return (
     <div className="orders-page">
@@ -29,7 +35,7 @@ export const OrdersOverview = () => {
         <input
           className="form-input search-input"
           type="search"
-          placeholder="Search by order ID or shop..."
+          placeholder="Search by order ID, customer or shop…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -47,6 +53,8 @@ export const OrdersOverview = () => {
         ))}
       </div>
 
+      {error && <div className="alert alert--error">{error}</div>}
+
       {isLoading ? (
         <Loader label="Loading orders..." />
       ) : filtered.length === 0 ? (
@@ -57,6 +65,7 @@ export const OrdersOverview = () => {
             <thead>
               <tr>
                 <th>Order ID</th>
+                <th>Customer</th>
                 <th>Shop</th>
                 <th>Date</th>
                 <th>Total</th>
@@ -67,7 +76,8 @@ export const OrdersOverview = () => {
               {filtered.map((order) => (
                 <tr key={order.id}>
                   <td><code className="order-id">#{order.id?.slice(-8) ?? order.id}</code></td>
-                  <td>{order.shop_name || order.shop?.name || order.shopId || '—'}</td>
+                  <td>{order.customers?.full_name || '—'}</td>
+                  <td>{order.shops?.name || '—'}</td>
                   <td>{order.created_at ? formatDate(order.created_at, 'DD MMM YYYY') : '—'}</td>
                   <td>{formatCurrency(order.total_amount ?? 0)}</td>
                   <td>

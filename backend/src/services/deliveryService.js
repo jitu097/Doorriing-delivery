@@ -5,12 +5,12 @@ const { getSupabaseClient } = require('../config/db');
 const { verifyPassword } = require('../utils/passwordHash');
 const { signToken } = require('../utils/jwtHelper');
 
-// Allowed status state-machine transitions
+// Allowed status state-machine transitions (value = valid previous status/es)
 const VALID_TRANSITIONS = {
-  accepted: 'assigned',
-  picked_up: 'accepted',
-  out_for_delivery: 'picked_up',
-  delivered: 'out_for_delivery'
+  accepted: ['assigned'],
+  picked_up: ['accepted', 'assigned'],  // skip accept: allow direct from assigned
+  out_for_delivery: ['picked_up'],
+  delivered: ['out_for_delivery']
 };
 
 // Timestamp columns for each terminal transition
@@ -60,16 +60,93 @@ const login = async ({ email, password }) => {
   };
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const getAssignedOrders = async (deliveryPartnerId) => {
+  if (!UUID_RE.test(deliveryPartnerId)) return [];
+
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('order_delivery_assignments')
-    .select('*, orders(*)')
+    .select(`
+      id,
+      order_id,
+      status,
+      assigned_at,
+      accepted_at,
+      picked_up_at,
+      delivered_at,
+      orders (
+        id,
+        total_amount,
+        created_at,
+        shops ( id, name, address, phone ),
+        customers (
+          id, full_name, phone,
+          customer_addresses ( id, address_line_1, address_line_2, city, state, pincode, landmark, phone, is_default )
+        )
+      )
+    `)
     .eq('delivery_partner_id', deliveryPartnerId)
     .in('status', ['assigned', 'accepted', 'picked_up', 'out_for_delivery'])
-    .order('created_at', { ascending: false });
+    .order('assigned_at', { ascending: false });
 
   if (error) throw createError(500, error.message);
+  return data;
+};
+
+const updateOrderStatus = async (orderId, deliveryPartnerId, newStatus) => {
+  const supabase = getSupabaseClient();
+
+  const { data: assignment, error: fetchError } = await supabase
+    .from('order_delivery_assignments')
+    .select('id, status')
+    .eq('order_id', orderId)
+    .eq('delivery_partner_id', deliveryPartnerId)
+    .in('status', ['assigned', 'accepted', 'picked_up', 'out_for_delivery'])
+    .order('assigned_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (fetchError || !assignment) throw createError(404, 'Assignment not found');
+
+  const requiredCurrentStatuses = VALID_TRANSITIONS[newStatus];
+  if (!requiredCurrentStatuses) throw createError(422, `Unknown target status: ${newStatus}`);
+
+  if (!requiredCurrentStatuses.includes(assignment.status)) {
+    throw createError(
+      422,
+      `Cannot transition from "${assignment.status}" to "${newStatus}". Expected one of: ${requiredCurrentStatuses.join(', ')}.`
+    );
+  }
+
+  const updatePayload = { status: newStatus };
+  if (TIMESTAMP_FIELDS[newStatus]) {
+    updatePayload[TIMESTAMP_FIELDS[newStatus]] = new Date().toISOString();
+  }
+
+  const { data, error } = await supabase
+    .from('order_delivery_assignments')
+    .update(updatePayload)
+    .eq('id', assignment.id)
+    .select()
+    .single();
+
+  if (error) throw createError(500, error.message);
+
+  // Sync the orders table so admin/seller side reflects the current status
+  const ORDER_STATUS_MAP = {
+    picked_up:        'out_for_delivery',
+    out_for_delivery: 'out_for_delivery',
+    delivered:        'delivered',
+  };
+  if (ORDER_STATUS_MAP[newStatus]) {
+    await supabase
+      .from('orders')
+      .update({ status: ORDER_STATUS_MAP[newStatus] })
+      .eq('id', orderId);
+  }
+
   return data;
 };
 
@@ -86,14 +163,14 @@ const updateAssignmentStatus = async (assignmentId, deliveryPartnerId, newStatus
 
   if (fetchError || !assignment) throw createError(404, 'Assignment not found');
 
-  const requiredCurrentStatus = VALID_TRANSITIONS[newStatus];
-  if (!requiredCurrentStatus) throw createError(422, `Unknown status: ${newStatus}`);
+  const requiredCurrentStatuses = VALID_TRANSITIONS[newStatus];
+  if (!requiredCurrentStatuses) throw createError(422, `Unknown status: ${newStatus}`);
 
-  if (assignment.status !== requiredCurrentStatus) {
+  if (!requiredCurrentStatuses.includes(assignment.status)) {
     throw createError(
       422,
       `Cannot transition from "${assignment.status}" to "${newStatus}". ` +
-        `Expected current status: "${requiredCurrentStatus}".`
+        `Expected one of: ${requiredCurrentStatuses.join(', ')}.`
     );
   }
 
@@ -114,10 +191,23 @@ const updateAssignmentStatus = async (assignmentId, deliveryPartnerId, newStatus
 };
 
 const getDeliveryHistory = async (deliveryPartnerId) => {
+  if (!UUID_RE.test(deliveryPartnerId)) return [];
+
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('order_delivery_assignments')
-    .select('*, orders(*)')
+    .select(`
+      id,
+      order_id,
+      status,
+      assigned_at,
+      delivered_at,
+      orders (
+        id,
+        total_amount,
+        shops ( id, name )
+      )
+    `)
     .eq('delivery_partner_id', deliveryPartnerId)
     .eq('status', 'delivered')
     .order('delivered_at', { ascending: false });
@@ -126,4 +216,4 @@ const getDeliveryHistory = async (deliveryPartnerId) => {
   return data;
 };
 
-module.exports = { login, getAssignedOrders, updateAssignmentStatus, getDeliveryHistory };
+module.exports = { login, getAssignedOrders, updateAssignmentStatus, updateOrderStatus, getDeliveryHistory };

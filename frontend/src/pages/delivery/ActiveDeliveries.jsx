@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { deliveryService } from '../../services/deliveryService';
 import { DeliveryOrderCard } from '../../components/delivery/DeliveryOrderCard';
 import { Loader } from '../../components/common/Loader';
@@ -9,20 +9,17 @@ const ACTIVE_STATUSES = ['accepted', 'picked_up', 'out_for_delivery'];
 export const ActiveDeliveries = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     setIsLoading(true);
     deliveryService.getAssignedOrders()
       .then((data) => setOrders((data || []).filter((o) => ACTIVE_STATUSES.includes(o.status))))
+      .catch((err) => setError(err.message || 'Failed to load deliveries'))
       .finally(() => setIsLoading(false));
-  };
+  }, []);
 
   useEffect(load, []);
-
-  const handleStatusChange = async (assignmentId, status) => {
-    await deliveryService.updateAssignmentStatus(assignmentId, status);
-    load();
-  };
 
   return (
     <div className="active-page">
@@ -44,7 +41,7 @@ export const ActiveDeliveries = () => {
             <DeliveryOrderCard
               key={order.id}
               order={order}
-              onStatusChange={handleStatusChange}
+              onRefresh={load}
             />
           ))}
         </div>

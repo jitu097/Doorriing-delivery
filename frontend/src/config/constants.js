@@ -3,9 +3,9 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 export const ROUTES = {
   admin: {
     base: '/admin',
-    login: '/admin/login',
     dashboard: '/admin/dashboard',
     shops: '/admin/shops',
+    shopDetails: (id) => `/admin/shops/${id}`,
     users: '/admin/users',
     orders: '/admin/orders',
     deliveryPartners: '/admin/delivery-partners',
@@ -13,10 +13,12 @@ export const ROUTES = {
   },
   delivery: {
     base: '/delivery',
-    login: '/delivery/login',
     dashboard: '/delivery/dashboard',
     assigned: '/delivery/assigned',
     active: '/delivery/active',
     history: '/delivery/history'
+  },
+  auth: {
+    login: '/login'
   }
 };

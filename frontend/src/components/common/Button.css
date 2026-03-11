@@ -21,7 +21,7 @@
 
 /* Variants */
 .btn--primary   { background: var(--primary); color: #fff; }
-.btn--primary:hover:not(:disabled)   { background: var(--primary-dark); box-shadow: 0 2px 8px rgba(99,102,241,0.4); }
+.btn--primary:hover:not(:disabled)   { background: var(--primary-dark); box-shadow: 0 2px 8px rgba(255,102,0,0.4); }
 
 .btn--secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
 .btn--secondary:hover:not(:disabled) { background: var(--gray-100); }
@@ -32,8 +32,11 @@
 .btn--success   { background: var(--success); color: #fff; }
 .btn--success:hover:not(:disabled)   { background: #059669; }
 
+.btn--blue      { background: #3b82f6; color: #fff; }
+.btn--blue:hover:not(:disabled)      { background: #2563eb; box-shadow: 0 2px 8px rgba(59,130,246,0.4); }
+
 .btn--ghost     { background: transparent; color: var(--primary); }
-.btn--ghost:hover:not(:disabled)     { background: rgba(99,102,241,0.08); }
+.btn--ghost:hover:not(:disabled)     { background: rgba(255,102,0,0.08); }
 
 /* Loading state */
 .btn--loading { pointer-events: none; }

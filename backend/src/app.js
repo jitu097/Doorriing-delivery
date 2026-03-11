@@ -4,10 +4,11 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { env } = require('./config/env');
 const { initSupabase } = require('./config/db');
-const adminRoutes = require('./routes/adminRoutes');
+const adminRoutes    = require('./routes/adminRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const shopRoutes = require('./routes/shopRoutes');
+const orderRoutes    = require('./routes/orderRoutes');
+const shopRoutes     = require('./routes/shopRoutes');
+const platformRoutes = require('./routes/platformRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
 const { requestValidator } = require('./middleware/validateRequest');
 
@@ -27,10 +28,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
-app.use('/api/admin', requestValidator('admin'), adminRoutes);
+app.use('/api/admin',    requestValidator('admin'), adminRoutes);
 app.use('/api/delivery', requestValidator('delivery'), deliveryRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/shops', shopRoutes);
+app.use('/api/orders',   orderRoutes);
+app.use('/api/shops',    shopRoutes);
+app.use('/api/platform', platformRoutes); // public — no auth
 
 app.use(errorHandler);
 

@@ -13,3 +13,8 @@
   align-self: center;
 }
 .search-input { max-width: 320px; }
+
+@media (max-width: 767px) {
+  .search-input { max-width: none; width: 100%; }
+  .shops-grid { grid-template-columns: 1fr; gap: 12px; }
+}

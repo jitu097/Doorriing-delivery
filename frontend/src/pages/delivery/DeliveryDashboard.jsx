@@ -9,16 +9,18 @@ export const DeliveryDashboard = () => {
   const { courier } = useDeliveryAuth();
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     deliveryService.getAssignedOrders()
       .then(setOrders)
+      .catch((err) => setError(err.message || 'Failed to load orders'))
       .finally(() => setIsLoading(false));
   }, []);
 
-  const active   = orders.filter((o) => ['accepted', 'picked_up', 'out_for_delivery'].includes(o.status));
-  const pending  = orders.filter((o) => o.status === 'assigned');
+  const active  = orders.filter((o) => ['accepted', 'picked_up', 'out_for_delivery'].includes(o.status));
+  const pending = orders.filter((o) => o.status === 'assigned');
 
   return (
     <div className="ddash-page">

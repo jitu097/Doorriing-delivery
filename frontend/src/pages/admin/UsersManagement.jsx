@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { adminService } from '../../services/adminService';
 import { UserCard } from '../../components/admin/UserCard';
 import { Loader } from '../../components/common/Loader';
@@ -17,24 +17,34 @@ export const UsersManagement = () => {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const filtered = users.filter((u) =>
-    !search ||
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return users;
+    return users.filter((u) =>
+      (u.full_name || '').toLowerCase().includes(q) ||
+      (u.email     || '').toLowerCase().includes(q) ||
+      (u.phone     || '').toLowerCase().includes(q)
+    );
+  }, [users, search]);
+
+  const blockedCount = useMemo(() => users.filter((u) => u.is_blocked).length, [users]);
 
   return (
     <div className="users-page">
       <div className="page-header">
-        <h1 className="page-title">Platform Users</h1>
-        <span className="page-count">{users.length} users</span>
+        <div>
+          <h1 className="page-title">Platform Users</h1>
+          <p className="page-subtitle">
+            {users.length} total &nbsp;&bull;&nbsp; {blockedCount} blocked
+          </p>
+        </div>
       </div>
 
       <div className="action-bar">
         <input
           className="form-input search-input"
           type="search"
-          placeholder="Search by name or email..."
+          placeholder="Search by name, email or phone…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -43,10 +53,10 @@ export const UsersManagement = () => {
       {error && <div className="alert alert--error">{error}</div>}
 
       {isLoading ? (
-        <Loader label="Loading users..." />
+        <Loader label="Loading users…" />
       ) : filtered.length === 0 ? (
         <div className="empty-state">
-          <p>No users found{search ? ` for "${search}"` : ''}.</p>
+          <p>No users found{search ? ` for “${search}”` : ''}.</p>
         </div>
       ) : (
         <div className="users-list">

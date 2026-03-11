@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { deliveryService } from '../../services/deliveryService';
 import { DeliveryOrderCard } from '../../components/delivery/DeliveryOrderCard';
 import { Loader } from '../../components/common/Loader';
@@ -9,20 +9,15 @@ export const AssignedOrders = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     setIsLoading(true);
     deliveryService.getAssignedOrders()
       .then(setOrders)
       .catch((err) => setError(err.message || 'Failed to load orders'))
       .finally(() => setIsLoading(false));
-  };
+  }, []);
 
   useEffect(load, []);
-
-  const handleStatusChange = async (assignmentId, status) => {
-    await deliveryService.updateAssignmentStatus(assignmentId, status);
-    load();
-  };
 
   return (
     <div className="assigned-page">
@@ -46,7 +41,7 @@ export const AssignedOrders = () => {
             <DeliveryOrderCard
               key={order.id}
               order={order}
-              onStatusChange={handleStatusChange}
+              onRefresh={load}
             />
           ))}
         </div>

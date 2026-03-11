@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import './Button.css';
 
-export const Button = ({
+export const Button = memo(({
   variant = 'primary',
   size = 'md',
   isLoading = false,
@@ -16,4 +17,4 @@ export const Button = ({
     {isLoading ? <span className="btn__spinner" aria-hidden="true" /> : null}
     <span>{children}</span>
   </button>
-);
+));

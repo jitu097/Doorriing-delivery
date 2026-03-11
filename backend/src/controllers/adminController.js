@@ -2,6 +2,7 @@
 
 const { formatResponse } = require('../utils/responseFormatter');
 const adminService = require('../services/adminService');
+const { logger } = require('../utils/logger');
 
 // POST /api/admin/login
 const login = async (req, res, next) => {
@@ -28,6 +29,38 @@ const getShops = async (req, res, next) => {
   try {
     const shops = await adminService.getShops();
     return res.json(formatResponse(shops));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// GET /api/admin/shops/:shopId
+const getShopById = async (req, res, next) => {
+  try {
+    const { shopId } = req.params;
+    const shop = await adminService.getShopById(shopId);
+    return res.json(formatResponse(shop));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// GET /api/admin/shops/:shopId/analytics
+const getShopAnalytics = async (req, res, next) => {
+  try {
+    const analytics = await adminService.getShopAnalytics(req.params.shopId);
+    return res.json(formatResponse(analytics));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// GET /api/admin/shops/:shopId/orders
+const getShopOrders = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const result = await adminService.getShopOrders(req.params.shopId, { page, limit });
+    return res.json(formatResponse(result));
   } catch (err) {
     return next(err);
   }
@@ -67,7 +100,27 @@ const getUsers = async (req, res, next) => {
   }
 };
 
-// PATCH /api/admin/users/:userId/block  { is_blocked: boolean }
+// PATCH /api/admin/users/:userId/block
+const blockUser = async (req, res, next) => {
+  try {
+    const user = await adminService.setUserBlockStatus(req.params.userId, true);
+    return res.json(formatResponse(user, 'User blocked successfully'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// PATCH /api/admin/users/:userId/unblock
+const unblockUser = async (req, res, next) => {
+  try {
+    const user = await adminService.setUserBlockStatus(req.params.userId, false);
+    return res.json(formatResponse(user, 'User unblocked successfully'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// kept for backward-compat (not used by any route)
 const setUserBlockStatus = async (req, res, next) => {
   try {
     const user = await adminService.setUserBlockStatus(
@@ -138,6 +191,41 @@ const assignDeliveryPartner = async (req, res, next) => {
   }
 };
 
+// GET /api/admin/shops/:shopId/withdrawals
+const getShopWithdrawals = async (req, res, next) => {
+  try {
+    const { shopId } = req.params;
+    const data = await adminService.getShopWithdrawals(shopId);
+    return res.json(formatResponse(data));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// POST /api/admin/withdrawals/:withdrawId/approve
+const approveWithdrawal = async (req, res, next) => {
+  try {
+    const { withdrawId } = req.params;
+    logger.info(`Withdrawal approve request: id=${withdrawId} admin=${req.admin?.email}`);
+    const data = await adminService.approveWithdrawal(withdrawId);
+    return res.json(formatResponse(data, 'Withdrawal approved successfully'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// POST /api/admin/withdrawals/:withdrawId/reject
+const rejectWithdrawal = async (req, res, next) => {
+  try {
+    const { withdrawId } = req.params;
+    const { admin_note } = req.body;
+    const data = await adminService.rejectWithdrawal(withdrawId, admin_note);
+    return res.json(formatResponse(data, 'Withdrawal rejected'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // GET /api/admin/settings
 const getPlatformSettings = async (req, res, next) => {
   try {
@@ -162,15 +250,23 @@ module.exports = {
   login,
   getDashboardStats,
   getShops,
+  getShopById,
+  getShopAnalytics,
+  getShopOrders,
   getShopStats,
   setShopBlockStatus,
   getUsers,
+  blockUser,
+  unblockUser,
   setUserBlockStatus,
   getOrderAnalytics,
   getDeliveryPartners,
   createDeliveryPartner,
   toggleDeliveryPartnerStatus,
   assignDeliveryPartner,
+  getShopWithdrawals,
+  approveWithdrawal,
+  rejectWithdrawal,
   getPlatformSettings,
   updatePlatformSettings
 };

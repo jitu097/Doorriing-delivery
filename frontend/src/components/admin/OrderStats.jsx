@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { formatCurrency } from '../../utils/formatCurrency';
 import './OrderStats.css';
 
-const Stat = ({ label, value, icon, colorClass }) => (
+const Stat = memo(({ label, value, icon, colorClass }) => (
   <div className="stat-card">
     <div className={`stat-card__icon ${colorClass}`}>
       {icon}
@@ -11,9 +12,9 @@ const Stat = ({ label, value, icon, colorClass }) => (
       <p className="stat-card__value">{value}</p>
     </div>
   </div>
-);
+));
 
-export const OrderStats = ({ stats }) => (
+export const OrderStats = memo(({ stats }) => (
   <div className="stat-grid">
     <Stat
       label="Orders Today"
@@ -85,4 +86,4 @@ export const OrderStats = ({ stats }) => (
       }
     />
   </div>
-);
+));

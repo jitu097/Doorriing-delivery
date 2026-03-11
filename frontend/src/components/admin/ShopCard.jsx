@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { Button } from '../common/Button';
+import { ROUTES } from '../../config/constants';
 import './ShopCard.css';
 
 export const ShopCard = ({ shop: initialShop, onUpdate }) => {
   const [shop, setShop] = useState(initialShop);
   const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
 
-  const toggleBlock = async () => {
+  const toggleBlock = async (e) => {
+    e.stopPropagation();
     setBusy(true);
     try {
       await adminService.setShopBlock(shop.id, !shop.is_blocked);
@@ -20,7 +24,13 @@ export const ShopCard = ({ shop: initialShop, onUpdate }) => {
   };
 
   return (
-    <div className={`shop-card ${shop.is_blocked ? 'shop-card--blocked' : ''}`}>
+    <div
+      className={`shop-card ${shop.is_blocked ? 'shop-card--blocked' : ''}`}
+      onClick={() => navigate(ROUTES.admin.shopDetails(shop.id))}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && navigate(ROUTES.admin.shopDetails(shop.id))}
+    >
       <div className="shop-card__header">
         <div className="shop-card__avatar">
           {(shop.shop_name || 'S').charAt(0).toUpperCase()}

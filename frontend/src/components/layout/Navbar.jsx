@@ -1,8 +1,15 @@
 import './Navbar.css';
 
-export const Navbar = ({ title, onLogout, user }) => (
+export const Navbar = ({ title, onLogout, user, onMenuToggle }) => (
   <header className="navbar">
     <div className="navbar__left">
+      <button className="navbar__hamburger" onClick={onMenuToggle} aria-label="Toggle menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
       <h1 className="navbar__title">{title}</h1>
     </div>
     <div className="navbar__right">
@@ -18,7 +25,7 @@ export const Navbar = ({ title, onLogout, user }) => (
           <polyline points="16 17 21 12 16 7"/>
           <line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
-        Logout
+        <span className="navbar__logout-label">Logout</span>
       </button>
     </div>
   </header>
