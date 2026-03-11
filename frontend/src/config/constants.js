@@ -1,4 +1,7 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const isDev = import.meta.env.DEV;
+export const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (isDev ? 'http://localhost:5000' : 'https://doorriing-seller.onrender.com');
 
 export const ROUTES = {
   admin: {
