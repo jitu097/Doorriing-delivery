@@ -18,6 +18,8 @@ const app = express();
 
 const PRODUCTION_ORIGINS = [
   'https://delivery.doorriing.com',
+  'https://admin.doorriing.com',
+  'https://seller.doorriing.com',
 ];
 
 const DEV_ORIGINS = [
@@ -26,16 +28,23 @@ const DEV_ORIGINS = [
   'http://localhost:5000',
 ];
 
-const allowedOrigins = env.CORS_ORIGINS
-  ? env.CORS_ORIGINS.split(',').map(o => o.trim())
-  : [...DEV_ORIGINS, ...PRODUCTION_ORIGINS];
+// If CORS_ORIGINS is '*' or not set at all → allow every origin (open).
+// Otherwise allow only the explicit comma-separated list.
+const rawOrigins = (env.CORS_ORIGINS || '').trim();
+const allowAll   = !rawOrigins || rawOrigins === '*';
+const allowedOrigins = allowAll
+  ? null
+  : rawOrigins.split(',').map(o => o.trim()).filter(Boolean);
+
+// When Render env var is not configured yet, fall back to the known domains.
+const effectiveOrigins = allowedOrigins || [...DEV_ORIGINS, ...PRODUCTION_ORIGINS];
 
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (effectiveOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: origin '${origin}' not allowed`));
   },
   credentials: true,

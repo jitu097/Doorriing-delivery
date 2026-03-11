@@ -30,7 +30,7 @@ export const DeliveryAuthProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await apiClient.post('/api/delivery/login', { email, password });
+      const { data } = await apiClient.post('/delivery/login', { email, password });
       const { token, partner } = data.data;
       localStorage.setItem(STORAGE_KEY, token);
       setCourier({ ...partner, role: 'delivery', token });

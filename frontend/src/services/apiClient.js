@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { API_URL } from '../config/constants';
 
+// Strip any accidental trailing /api from the env value, then append /api once.
+// This prevents double /api/api/... regardless of how VITE_API_URL is set.
+const baseURL = API_URL.replace(/\/api\/?$/, '') + '/api';
+
 const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL,
   withCredentials: true,
 });
 

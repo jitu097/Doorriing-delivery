@@ -30,7 +30,7 @@ export const AdminAuthProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await apiClient.post('/api/admin/login', { email, password });
+      const { data } = await apiClient.post('/admin/login', { email, password });
       const { token, admin } = data.data;
       localStorage.setItem(STORAGE_KEY, token);
       setAdminUser({ ...admin, token });
