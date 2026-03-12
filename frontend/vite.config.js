@@ -16,7 +16,7 @@ export default defineConfig({
 
       manifest: {
         name: 'Doorriing Admin & Delivery',
-        short_name: 'Doorriing',
+        short_name: 'Doorriing Delivery',
         description: 'Doorriing Admin Panel and Delivery Partner Dashboard',
         theme_color: '#FF6600',
         background_color: '#1a0a00',
