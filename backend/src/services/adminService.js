@@ -5,6 +5,7 @@ const { getSupabaseClient } = require('../config/db');
 const { hashPassword, verifyPassword } = require('../utils/passwordHash');
 const { signToken } = require('../utils/jwtHelper');
 const { logger } = require('../utils/logger');
+const { sendPushNotification } = require('./deliveryNotificationService');
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -318,6 +319,18 @@ const assignDeliveryPartner = async (orderId, deliveryPartnerId) => {
 
   if (existing) throw createError(409, 'Order already has an active delivery assignment');
 
+  // Guard 2: reject if the delivery partner already has an active 'assigned' order
+  const { data: partnerExisting } = await supabase
+    .from('order_delivery_assignments')
+    .select('id')
+    .eq('delivery_partner_id', deliveryPartnerId)
+    .eq('status', 'assigned')
+    .maybeSingle();
+
+  if (partnerExisting) {
+    throw createError(409, 'Delivery partner already has an active assigned order. They must accept or decline before receiving another.');
+  }
+
   const { data, error } = await supabase
     .from('order_delivery_assignments')
     .insert({
@@ -329,6 +342,19 @@ const assignDeliveryPartner = async (orderId, deliveryPartnerId) => {
     .single();
 
   if (error) throw createError(500, error.message);
+
+  // Trigger notification — wrapped in try/catch to not block core flow
+  try {
+    sendPushNotification(
+      deliveryPartnerId,
+      orderId,
+      'New Delivery Assigned',
+      `Order #${orderId} assigned to you`
+    );
+  } catch (err) {
+    logger.error(`[assignDeliveryPartner] Notification hook failed:`, err);
+  }
+
   return data;
 };
 

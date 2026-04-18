@@ -10,14 +10,16 @@ const VALID_TRANSITIONS = {
   accepted: ['assigned'],
   picked_up: ['accepted', 'assigned'],  // skip accept: allow direct from assigned
   out_for_delivery: ['picked_up'],
-  delivered: ['out_for_delivery']
+  delivered: ['out_for_delivery'],
+  rejected: ['assigned']
 };
 
 // Timestamp columns for each terminal transition
 const TIMESTAMP_FIELDS = {
   accepted: 'accepted_at',
   picked_up: 'picked_up_at',
-  delivered: 'delivered_at'
+  delivered: 'delivered_at',
+  rejected: 'rejected_at'
 };
 
 const login = async ({ email, password }) => {
@@ -216,4 +218,65 @@ const getDeliveryHistory = async (deliveryPartnerId) => {
   return data;
 };
 
-module.exports = { login, getAssignedOrders, updateAssignmentStatus, updateOrderStatus, getDeliveryHistory };
+const getNotifications = async (deliveryPartnerId) => {
+  if (!UUID_RE.test(deliveryPartnerId)) return [];
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('delivery_notifications')
+    .select('*')
+    .eq('delivery_partner_id', deliveryPartnerId)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) throw createError(500, error.message);
+  return data;
+};
+
+const getUnreadCount = async (deliveryPartnerId) => {
+  if (!UUID_RE.test(deliveryPartnerId)) return 0;
+  const supabase = getSupabaseClient();
+  const { count, error } = await supabase
+    .from('delivery_notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('delivery_partner_id', deliveryPartnerId)
+    .eq('is_read', false);
+  if (error) throw createError(500, error.message);
+  return count || 0;
+};
+
+const markAsRead = async (notificationId, deliveryPartnerId) => {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('delivery_notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('id', notificationId)
+    .eq('delivery_partner_id', deliveryPartnerId)
+    .select()
+    .single();
+  if (error) throw createError(500, error.message);
+  return data;
+};
+
+const markAllNotificationsAsRead = async (deliveryPartnerId) => {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('delivery_notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('delivery_partner_id', deliveryPartnerId)
+    .eq('is_read', false);
+  if (error) throw createError(500, error.message);
+  return true;
+};
+
+module.exports = { 
+  login, 
+  getAssignedOrders, 
+  updateAssignmentStatus, 
+  updateOrderStatus, 
+  getDeliveryHistory, 
+  getNotifications,
+  getUnreadCount,
+  markAsRead,
+  markAllNotificationsAsRead
+};

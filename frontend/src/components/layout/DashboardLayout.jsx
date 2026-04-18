@@ -3,12 +3,18 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { DeliveryBottomNav } from './DeliveryBottomNav';
+import { useNotifications } from '../../context/NotificationContext';
+import { IncomingOrderCard } from '../delivery/IncomingOrderCard';
 import './DashboardLayout.css';
 
 export const DashboardLayout = ({ title, links, onLogout, user }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const isDelivery = title === 'Delivery';
+  
+  // Conditionally use notifications context
+  const notificationCtx = isDelivery ? useNotifications() : { currentIncomingOrder: null };
+  const { currentIncomingOrder, acceptIncomingOrder, declineIncomingOrder } = notificationCtx;
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -40,6 +46,13 @@ export const DashboardLayout = ({ title, links, onLogout, user }) => {
         </main>
         {isDelivery && <DeliveryBottomNav links={links} />}
       </div>
+      {isDelivery && currentIncomingOrder && (
+        <IncomingOrderCard 
+          order={currentIncomingOrder} 
+          onAccept={acceptIncomingOrder} 
+          onDecline={declineIncomingOrder}
+        />
+      )}
     </div>
   );
 };

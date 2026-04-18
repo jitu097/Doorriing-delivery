@@ -53,6 +53,12 @@ const schemas = {
 
   rejectWithdrawal: Joi.object({
     admin_note: Joi.string().max(500).allow('', null).optional()
+  }),
+
+  saveDeliveryToken: Joi.object({
+    token: Joi.string().required(),
+    device_id: Joi.string().required(),
+    platform: Joi.string().valid('android', 'ios', 'web').required()
   })
 };
 

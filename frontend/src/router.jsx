@@ -5,6 +5,7 @@ import { Loader } from './components/common/Loader';
 import { ROUTES } from './config/constants';
 import { useAdminAuth } from './hooks/useAdminAuth';
 import { useDeliveryAuth } from './hooks/useDeliveryAuth';
+import { NotificationProvider } from './context/NotificationContext';
 import './router.css';
 
 // Lazy-loaded admin pages
@@ -56,7 +57,11 @@ const DeliveryRoute = () => {
   if (!courier) {
     return <Navigate to="/login" replace />;
   }
-  return <DashboardLayout title="Delivery" links={deliveryLinks} onLogout={logout} user={courier} />;
+  return (
+    <NotificationProvider>
+      <DashboardLayout title="Delivery" links={deliveryLinks} onLogout={logout} user={courier} />
+    </NotificationProvider>
+  );
 };
 
 export const router = createBrowserRouter([

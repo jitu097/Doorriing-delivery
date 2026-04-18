@@ -1,4 +1,5 @@
 import { InstallButton } from '../common/InstallButton';
+import { NotificationBell } from '../notifications/NotificationBell';
 import './Navbar.css';
 
 export const Navbar = ({ title, onLogout, user, onMenuToggle }) => (
@@ -20,6 +21,7 @@ export const Navbar = ({ title, onLogout, user, onMenuToggle }) => (
           <span className="navbar__email">{user.email}</span>
         </div>
       )}
+      {title === 'Delivery' && <NotificationBell />}
       <InstallButton />
       <button className="navbar__logout" onClick={onLogout}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16">

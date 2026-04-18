@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { env } = require('./config/env');
 const { initSupabase } = require('./config/db');
+const { initFirebase } = require('./config/firebase');
 const adminRoutes    = require('./routes/adminRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
 const orderRoutes    = require('./routes/orderRoutes');
@@ -13,6 +14,7 @@ const { errorHandler } = require('./middleware/errorHandler');
 const { requestValidator } = require('./middleware/validateRequest');
 
 initSupabase();
+initFirebase();
 
 const app = express();
 

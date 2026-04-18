@@ -21,6 +21,9 @@ router.use(deliveryAuthMiddleware);
 // GET  /api/delivery/orders  — list active assigned orders for this partner
 router.get('/orders', deliveryController.getAssignedOrders);
 
+// Alias for persistent card check
+router.get('/assigned-orders', deliveryController.getAssignedOrders);
+
 // PATCH /api/delivery/assignments/:assignmentId/status  { status }
 router.patch(
   '/assignments/:assignmentId/status',
@@ -31,8 +34,11 @@ router.patch(
 // GET /api/delivery/history  — completed deliveries for this partner
 router.get('/history', deliveryController.getDeliveryHistory);
 
-// POST /api/delivery/orders/:orderId/accept
-router.post('/orders/:orderId/accept', deliveryController.acceptOrder);
+// POST /api/delivery/assignments/:assignmentId/accept
+router.post('/assignments/:assignmentId/accept', deliveryController.acceptOrder);
+
+// POST /api/delivery/assignments/:assignmentId/decline
+router.post('/assignments/:assignmentId/decline', deliveryController.declineOrder);
 
 // POST /api/delivery/orders/:orderId/picked-up
 router.post('/orders/:orderId/picked-up', deliveryController.pickedUp);
@@ -40,7 +46,23 @@ router.post('/orders/:orderId/picked-up', deliveryController.pickedUp);
 // POST /api/delivery/orders/:orderId/out-for-delivery
 router.post('/orders/:orderId/out-for-delivery', deliveryController.outForDelivery);
 
-// POST /api/delivery/orders/:orderId/delivered
-router.post('/orders/:orderId/delivered', deliveryController.delivered);
+// POST /api/delivery/push-token  — save FCM token for push notifications
+router.post(
+  '/push-token',
+  validateBody('saveDeliveryToken'),
+  deliveryController.saveDeliveryToken
+);
+
+// GET /api/delivery/notifications — fetch history
+router.get('/notifications', deliveryController.getNotifications);
+
+// GET /api/delivery/notifications/unread-count
+router.get('/notifications/unread-count', deliveryController.getUnreadCount);
+
+// PATCH /api/delivery/notifications/:id/read
+router.patch('/notifications/:id/read', deliveryController.markAsRead);
+
+// PATCH /api/delivery/notifications/read-all
+router.patch('/notifications/read-all', deliveryController.markAllRead);
 
 module.exports = router;
