@@ -26,13 +26,14 @@ const login = async ({ email, password }) => {
   const { env } = require('../config/env');
 
   // --- Temporary hardcoded delivery partner (remove before production) ---
+  const TEMP_ID = '00000000-0000-0000-0000-000000000000';
   if (
     env.TEMP_DELIVERY_EMAIL &&
     email === env.TEMP_DELIVERY_EMAIL &&
     password === env.TEMP_DELIVERY_PASSWORD
   ) {
-    const token = signToken({ id: 'temp-delivery', email, role: 'delivery' });
-    return { token, partner: { id: 'temp-delivery', name: 'Test Rider', email, role: 'delivery' } };
+    const token = signToken({ id: TEMP_ID, email, role: 'delivery' });
+    return { token, partner: { id: TEMP_ID, name: 'Test Rider', email, role: 'delivery' } };
   }
   // -----------------------------------------------------------------------
 

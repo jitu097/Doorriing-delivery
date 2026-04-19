@@ -14,11 +14,12 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
     initFirebase();
     const supabase = getSupabaseClient();
 
-    // 1. Fetch all FCM tokens for the delivery partner
+    // 1. Fetch all FCM tokens for the delivery partner (scoped to delivery role)
     const { data: tokensData, error: tokenError } = await supabase
       .from('delivery_notification_tokens')
       .select('fcm_token')
-      .eq('delivery_partner_id', deliveryPartnerId);
+      .eq('delivery_partner_id', deliveryPartnerId)
+      .eq('role', 'delivery');
 
     if (tokenError) {
       logger.error(`[deliveryNotification] Error fetching tokens for partner ${deliveryPartnerId}:`, tokenError);
@@ -58,8 +59,7 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
       tokens,
       notification: {
         title,
-        body,
-        click_action: 'FLUTTER_NOTIFICATION_CLICK'
+        body
       },
       data: {
         order_id: String(orderId),

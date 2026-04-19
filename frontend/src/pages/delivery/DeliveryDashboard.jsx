@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { deliveryService } from '../../services/deliveryService';
 import { DeliveryStatusButtons } from '../../components/delivery/DeliveryStatusButtons';
 import { Loader } from '../../components/common/Loader';
-import { useDeliveryAuth } from '../../hooks/useDeliveryAuth';
+import { useAuth } from '../../hooks/useAuth';
 import './DeliveryDashboard.css';
 
 export const DeliveryDashboard = () => {
-  const { courier } = useDeliveryAuth();
+  const { courier } = useAuth();
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);

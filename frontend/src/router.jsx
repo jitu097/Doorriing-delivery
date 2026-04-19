@@ -3,9 +3,8 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { Loader } from './components/common/Loader';
 import { ROUTES } from './config/constants';
-import { useAdminAuth } from './hooks/useAdminAuth';
-import { useDeliveryAuth } from './hooks/useDeliveryAuth';
-import { NotificationProvider } from './context/NotificationContext';
+import { useAuth } from './hooks/useAuth';
+import { NotificationProvider } from './context/NotificationProvider';
 import './router.css';
 
 // Lazy-loaded admin pages
@@ -45,7 +44,9 @@ const deliveryLinks = [
 ];
 
 const AdminRoute = () => {
-  const { adminUser, logout } = useAdminAuth();
+  const { adminUser, logout, isLoading } = useAuth();
+  
+  if (isLoading) return <PageLoader />;
   if (!adminUser) {
     return <Navigate to="/login" replace />;
   }
@@ -53,7 +54,9 @@ const AdminRoute = () => {
 };
 
 const DeliveryRoute = () => {
-  const { courier, logout } = useDeliveryAuth();
+  const { courier, logout, isLoading } = useAuth();
+  
+  if (isLoading) return <PageLoader />;
   if (!courier) {
     return <Navigate to="/login" replace />;
   }

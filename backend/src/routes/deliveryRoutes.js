@@ -46,11 +46,20 @@ router.post('/orders/:orderId/picked-up', deliveryController.pickedUp);
 // POST /api/delivery/orders/:orderId/out-for-delivery
 router.post('/orders/:orderId/out-for-delivery', deliveryController.outForDelivery);
 
+// POST /api/delivery/orders/:orderId/delivered
+router.post('/orders/:orderId/delivered', deliveryController.delivered);
+
 // POST /api/delivery/push-token  — save FCM token for push notifications
 router.post(
   '/push-token',
   validateBody('saveDeliveryToken'),
   deliveryController.saveDeliveryToken
+);
+
+// DELETE /api/delivery/push-token — remove FCM token
+router.delete(
+  '/push-token',
+  deliveryController.deleteDeliveryToken
 );
 
 // GET /api/delivery/notifications — fetch history

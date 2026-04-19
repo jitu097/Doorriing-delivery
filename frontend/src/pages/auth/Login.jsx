@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth } from '../../hooks/useAdminAuth';
-import { useDeliveryAuth } from '../../hooks/useDeliveryAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../config/constants';
 import { Button } from '../../components/common/Button';
 import './Login.css';
@@ -11,28 +10,25 @@ export const Login = () => {
   const [password, setPassword] = useState('');
   const [genericError, setGenericError] = useState('');
   
-  const { login: adminLogin, isLoading: isAdminLoading, error: adminError, clearError: clearAdminError } = useAdminAuth();
-  const { login: deliveryLogin, isLoading: isDeliveryLoading, error: deliveryError, clearError: clearDeliveryError } = useDeliveryAuth();
+  const { login, isLoading, error: authError, clearError: clearAuthError } = useAuth();
   
   const navigate = useNavigate();
-  const isLoading = isAdminLoading || isDeliveryLoading;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    clearAdminError();
-    clearDeliveryError();
+    clearAuthError();
     setGenericError('');
 
     // First try admin login
-    const isAdminOk = await adminLogin({ email, password });
-    if (isAdminOk) {
+    const adminRes = await login({ email, password, type: 'admin' });
+    if (adminRes.success) {
       navigate(ROUTES.admin.dashboard);
       return;
     }
     
     // Admin failed, try delivery login
-    const isDeliveryOk = await deliveryLogin({ email, password });
-    if (isDeliveryOk) {
+    const deliveryRes = await login({ email, password, type: 'delivery' });
+    if (deliveryRes.success) {
       navigate(ROUTES.delivery.dashboard);
       return;
     }
@@ -41,7 +37,7 @@ export const Login = () => {
     setGenericError('Invalid credentials or account not found.');
   };
 
-  const displayError = genericError || adminError || deliveryError;
+  const displayError = genericError || authError;
 
   return (
     <div className="auth-page auth-page--delivery">

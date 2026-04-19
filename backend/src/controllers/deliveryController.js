@@ -150,17 +150,19 @@ const saveDeliveryToken = async (req, res, next) => {
     const supabase = getSupabaseClient();
 
     // Upsert into delivery_notification_tokens
+    // onConflict: fcm_token (ensure this unique constraint exists in DB)
     console.log("[push-token] Saving token:", token);
     const { data, error } = await supabase
       .from('delivery_notification_tokens')
       .upsert({
-        delivery_partner_id: deliveryPartnerId,
         fcm_token: token,
+        delivery_partner_id: deliveryPartnerId,
         device_id: device_id || 'web',
         platform: platform || 'web',
+        role: 'delivery',
         last_used_at: new Date()
       }, {
-        onConflict: 'delivery_partner_id,device_id'
+        onConflict: 'fcm_token'
       })
       .select()
       .single();
@@ -176,6 +178,27 @@ const saveDeliveryToken = async (req, res, next) => {
       message: 'Push token saved successfully',
       data
     });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// DELETE /api/delivery/push-token
+const deleteDeliveryToken = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    if (!token) throw createError(400, 'FCM token is required');
+
+    const supabase = getSupabaseClient();
+    const { error } = await supabase
+      .from('delivery_notification_tokens')
+      .delete()
+      .eq('fcm_token', token)
+      .eq('role', 'delivery'); // safety
+
+    if (error) throw error;
+    
+    return res.json({ success: true, message: 'Push token deleted' });
   } catch (err) {
     return next(err);
   }
@@ -229,6 +252,7 @@ module.exports = {
   outForDelivery,
   delivered,
   saveDeliveryToken,
+  deleteDeliveryToken,
   getNotifications,
   getUnreadCount,
   markAsRead,
