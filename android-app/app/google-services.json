@@ -1,26 +1,134 @@
 {
   "project_info": {
-    "project_number": "123456789",
-    "project_id": "doorriing-delivery-placeholder",
-    "storage_bucket": "doorriing-delivery-placeholder.appspot.com"
+    "project_number": "1049973675081",
+    "project_id": "bazarse-d4963",
+    "storage_bucket": "bazarse-d4963.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789:android:placeholder",
+        "mobilesdk_app_id": "1:1049973675081:android:d894c2a074488369ab5b98",
         "android_client_info": {
           "package_name": "com.doorriing.delivery"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1049973675081-orm96im2u91quk7m1cqrhqjvhijev60j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doorriing.delivery",
+            "certificate_hash": "0d145ca0fdaf9862cccedc21a1b89dcea3c77b31"
+          }
+        },
+        {
+          "client_id": "1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "placeholder_api_key"
+          "current_key": "AIzaSyAZkLZFN8UYJUwR72nvVYaezLOZjhARioM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049973675081:android:6ee431a3aa5b6df1ab5b98",
+        "android_client_info": {
+          "package_name": "com.doorriing.seller"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1049973675081-168cujh7l2jmsrvriacf3irb6qu76dpq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doorriing.seller",
+            "certificate_hash": "0d145ca0fdaf9862cccedc21a1b89dcea3c77b31"
+          }
+        },
+        {
+          "client_id": "1049973675081-gbaerhteuiivuu1umu4f43u674q1lihj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doorriing.seller",
+            "certificate_hash": "6477b1d3abad23dc9b3eaec522180c9282a49922"
+          }
+        },
+        {
+          "client_id": "1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZkLZFN8UYJUwR72nvVYaezLOZjhARioM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049973675081:android:1347373355d3509aab5b98",
+        "android_client_info": {
+          "package_name": "com.doorriing.user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1049973675081-k2ucp9jvn1q5mcdfaucohidusdk0jqba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doorriing.user",
+            "certificate_hash": "039d9548462b4a9d17618a61742e4b040236277e"
+          }
+        },
+        {
+          "client_id": "1049973675081-r20js7h57g3j1k9jopql9jfdp0qtidt4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doorriing.user",
+            "certificate_hash": "0d145ca0fdaf9862cccedc21a1b89dcea3c77b31"
+          }
+        },
+        {
+          "client_id": "1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZkLZFN8UYJUwR72nvVYaezLOZjhARioM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

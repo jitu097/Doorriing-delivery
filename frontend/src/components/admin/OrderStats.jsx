@@ -85,5 +85,17 @@ export const OrderStats = memo(({ stats }) => (
         </svg>
       }
     />
+    <Stat
+      label="Total COD Pending"
+      value={formatCurrency(stats.totalPendingCash ?? 0)}
+      colorClass="stat-card__icon--emerald"
+      icon={
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+          <line x1="7" y1="15" x2="11" y2="15"/>
+        </svg>
+      }
+    />
   </div>
 ));

@@ -1,1 +1,7 @@
-/* OrderStats uses .stat-grid / .stat-card from dashboard.css — no additional rules needed */
+.stat-card__icon--blue { background: #dbeafe; color: #3b82f6; }
+.stat-card__icon--green { background: #dcfce7; color: #22c55e; }
+.stat-card__icon--amber { background: #fef3c7; color: #d97706; }
+.stat-card__icon--purple { background: #f3e8ff; color: #a855f7; }
+.stat-card__icon--indigo { background: #e0e7ff; color: #4f46e5; }
+.stat-card__icon--red { background: #fee2e2; color: #ef4444; }
+.stat-card__icon--emerald { background: #d1fae5; color: #10b981; }

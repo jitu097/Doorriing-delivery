@@ -4,6 +4,7 @@ const createError = require('http-errors');
 const { getSupabaseClient } = require('../config/db');
 const { verifyPassword } = require('../utils/passwordHash');
 const { signToken } = require('../utils/jwtHelper');
+const cashService = require('./cash.service');
 
 // Allowed status state-machine transitions (value = valid previous status/es)
 const VALID_TRANSITIONS = {
@@ -148,6 +149,26 @@ const updateOrderStatus = async (orderId, deliveryPartnerId, newStatus) => {
       .from('orders')
       .update({ status: ORDER_STATUS_MAP[newStatus] })
       .eq('id', orderId);
+
+    // If delivered, trigger cash collection tracking for COD orders
+    if (newStatus === 'delivered') {
+      try {
+        // Fetch order details for cash collection logic
+        const { data: order } = await supabase
+          .from('orders')
+          .select('id, payment_method, total_amount')
+          .eq('id', orderId)
+          .single();
+
+        if (order) {
+          await cashService.addCashCollection(order, deliveryPartnerId);
+        }
+      } catch (err) {
+        // Log but don't fail the order delivery flow
+        const { logger } = require('../utils/logger');
+        logger.error(`[updateOrderStatus] Cash collection hook failed for order ${orderId}:`, err);
+      }
+    }
   }
 
   return data;

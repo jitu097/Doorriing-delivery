@@ -2,6 +2,7 @@
 
 const { formatResponse } = require('../utils/responseFormatter');
 const adminService = require('../services/adminService');
+const cashService = require('../services/cash.service');
 const { logger } = require('../utils/logger');
 
 // POST /api/admin/login
@@ -246,6 +247,27 @@ const updatePlatformSettings = async (req, res, next) => {
   }
 };
 
+// GET /api/admin/delivery-partners/:id/cash
+const getPartnerCash = async (req, res, next) => {
+  try {
+    const data = await cashService.getPartnerCash(req.params.id);
+    return res.json(formatResponse(data));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// POST /api/admin/delivery-partners/:id/settle-cash
+const settleCash = async (req, res, next) => {
+  try {
+    const adminId = req.admin.id;
+    const data = await cashService.settlePartnerCash(req.params.id, adminId);
+    return res.json(formatResponse(data, 'Cash settled successfully'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
 module.exports = {
   login,
   getDashboardStats,
@@ -268,5 +290,7 @@ module.exports = {
   approveWithdrawal,
   rejectWithdrawal,
   getPlatformSettings,
-  updatePlatformSettings
+  updatePlatformSettings,
+  getPartnerCash,
+  settleCash
 };

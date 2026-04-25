@@ -1,0 +1,143 @@
+.pcd {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pcd__back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.pcd__back:hover {
+  background: var(--gray-100);
+  color: var(--text);
+}
+
+.pcd__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.pcd__header-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pcd__header-sub {
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.pcd__header-stats {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.pcd__stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.pcd__stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.pcd__stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.pcd__stat-value--pending {
+  color: var(--success);
+}
+
+.pcd__section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.pcd__table-wrap {
+  overflow-x: auto;
+  margin: 0 -24px;
+}
+
+.pcd__table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.pcd__table th {
+  background: var(--gray-50);
+  padding: 12px 24px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+
+.pcd__table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.pcd__order-id {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.pcd__amount {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pcd__date {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.badge--warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+@media (max-width: 768px) {
+  .pcd { padding: 16px; }
+  .pcd__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .pcd__header-stats {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+}

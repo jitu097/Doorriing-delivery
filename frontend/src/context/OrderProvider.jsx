@@ -1,13 +1,15 @@
 import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { deliveryService } from '../services/deliveryService';
+import { adminService } from '../services/adminService';
 import { useAuth } from '../hooks/useAuth';
 
 export const OrderContext = createContext(null);
 
 export const OrderProvider = ({ children }) => {
-  const { courier } = useAuth();
+  const { courier, adminUser } = useAuth();
   const [activeOrders, setActiveOrders] = useState([]);
   const [history, setHistory] = useState([]);
+  const [orders, setOrders] = useState([]); // All orders for admin
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -40,15 +42,31 @@ export const OrderProvider = ({ children }) => {
     }
   }, [courier]);
 
+  const fetchAllOrders = useCallback(async () => {
+    if (!adminUser) return;
+    setIsLoading(true);
+    try {
+      const data = await adminService.getOrders();
+      setOrders(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [adminUser]);
+
   useEffect(() => {
     if (courier) {
       fetchActiveOrders();
       fetchHistory();
+    } else if (adminUser) {
+      fetchAllOrders();
     } else {
       setActiveOrders([]);
       setHistory([]);
+      setOrders([]);
     }
-  }, [courier, fetchActiveOrders, fetchHistory]);
+  }, [courier, adminUser, fetchActiveOrders, fetchHistory, fetchAllOrders]);
 
   const updateStatus = useCallback(async (orderId, status) => {
     try {
@@ -67,14 +85,16 @@ export const OrderProvider = ({ children }) => {
   }, [fetchActiveOrders, fetchHistory]);
 
   const value = useMemo(() => ({
+    orders,
     activeOrders,
     history,
     isLoading,
     error,
     refreshOrders: fetchActiveOrders,
     refreshHistory: fetchHistory,
+    refreshAllOrders: fetchAllOrders,
     updateStatus
-  }), [activeOrders, history, isLoading, error, fetchActiveOrders, fetchHistory, updateStatus]);
+  }), [orders, activeOrders, history, isLoading, error, fetchActiveOrders, fetchHistory, fetchAllOrders, updateStatus]);
 
   return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;
 };

@@ -58,7 +58,7 @@ const getDashboardStats = async () => {
     supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('users').select('id', { count: 'exact', head: true }),
     supabase.from('shops').select('id', { count: 'exact', head: true }).eq('is_active', true),
-    supabase.from('delivery_partners').select('id', { count: 'exact', head: true }).eq('is_active', true)
+    supabase.from('delivery_partners').select('id, wallet_cash').eq('is_active', true)
   ]);
 
   const todayOrders = todayOrdersRes.data || [];
@@ -71,7 +71,8 @@ const getDashboardStats = async () => {
     pendingOrders: pendingRes.count || 0,
     activeShops: shopsRes.count || 0,
     totalUsers: usersRes.count || 0,
-    activeDeliveryPartners: partnersRes.count || 0
+    activeDeliveryPartners: partnersRes.data?.length || 0,
+    totalPendingCash: partnersRes.data?.reduce((sum, p) => sum + (Number(p.wallet_cash) || 0), 0) || 0
   };
 };
 

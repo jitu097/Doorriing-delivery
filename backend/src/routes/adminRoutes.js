@@ -59,6 +59,10 @@ router.patch(
   adminController.toggleDeliveryPartnerStatus
 );
 
+// Cash Collection Tracking
+router.get('/delivery-partners/:id/cash', adminController.getPartnerCash);
+router.post('/delivery-partners/:id/settle-cash', adminController.settleCash);
+
 // Assignments (admin assigns a delivery partner to an order)
 router.post('/assignments', validateBody('assignDelivery'), adminController.assignDeliveryPartner);
 

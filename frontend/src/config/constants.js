@@ -12,6 +12,7 @@ export const ROUTES = {
     users: '/admin/users',
     orders: '/admin/orders',
     deliveryPartners: '/admin/delivery-partners',
+    partnerCash: (id) => `/admin/delivery-partners/${id}/cash`,
     settings: '/admin/settings'
   },
   delivery: {

@@ -14,6 +14,7 @@ const AdminShopDetails = lazy(() => import('./pages/admin/AdminShopDetails').the
 const UsersManagement  = lazy(() => import('./pages/admin/UsersManagement').then((m) => ({ default: m.UsersManagement })));
 const OrdersOverview   = lazy(() => import('./pages/admin/OrdersOverview').then((m) => ({ default: m.OrdersOverview })));
 const DeliveryPartners = lazy(() => import('./pages/admin/DeliveryPartners').then((m) => ({ default: m.DeliveryPartners })));
+const PartnerCashDetails = lazy(() => import('./pages/admin/PartnerCashDetails').then((m) => ({ default: m.PartnerCashDetails })));
 const PlatformSettings = lazy(() => import('./pages/admin/PlatformSettings').then((m) => ({ default: m.PlatformSettings })));
 
 // Lazy-loaded delivery pages
@@ -87,8 +88,9 @@ export const router = createBrowserRouter([
       { path: 'shops/:shopId',      element: <Suspense fallback={<PageLoader />}><AdminShopDetails /></Suspense> },
       { path: 'users',              element: <Suspense fallback={<PageLoader />}><UsersManagement /></Suspense> },
       { path: 'orders',             element: <Suspense fallback={<PageLoader />}><OrdersOverview /></Suspense> },
-      { path: 'delivery-partners',  element: <Suspense fallback={<PageLoader />}><DeliveryPartners /></Suspense> },
-      { path: 'settings',           element: <Suspense fallback={<PageLoader />}><PlatformSettings /></Suspense> }
+      { path: 'delivery-partners',      element: <Suspense fallback={<PageLoader />}><DeliveryPartners /></Suspense> },
+      { path: 'delivery-partners/:id/cash', element: <Suspense fallback={<PageLoader />}><PartnerCashDetails /></Suspense> },
+      { path: 'settings',               element: <Suspense fallback={<PageLoader />}><PlatformSettings /></Suspense> }
     ]
   },
   {

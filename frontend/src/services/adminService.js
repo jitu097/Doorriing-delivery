@@ -34,6 +34,9 @@ export const adminService = {
   togglePartnerStatus: (id, is_active) =>
     apiClient.patch(`/admin/delivery-partners/${id}/status`, { is_active }).then((r) => r.data.data),
 
+  getPartnerCash: (id) => apiClient.get(`/admin/delivery-partners/${id}/cash`).then((r) => r.data.data),
+  settlePartnerCash: (id) => apiClient.post(`/admin/delivery-partners/${id}/settle-cash`).then((r) => r.data.data),
+
   assignDelivery: (order_id, delivery_partner_id) =>
     apiClient.post('/admin/assignments', { order_id, delivery_partner_id }).then((r) => r.data.data),
 
