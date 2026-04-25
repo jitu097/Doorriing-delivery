@@ -70,4 +70,10 @@ router.post('/assignments', validateBody('assignDelivery'), adminController.assi
 router.get('/settings', adminController.getPlatformSettings);
 router.put('/settings', validateBody('updatePlatformSettings'), adminController.updatePlatformSettings);
 
+// Notifications
+router.get('/notifications', adminController.getNotifications);
+router.patch('/notifications/:id/read', adminController.markNotificationRead);
+router.post('/notifications/tokens', adminController.registerPushToken);
+router.delete('/notifications/tokens/:token', adminController.removePushToken);
+
 module.exports = router;

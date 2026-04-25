@@ -1,5 +1,6 @@
 import { InstallButton } from '../common/InstallButton';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { AdminNotificationBell } from '../admin/AdminNotificationBell';
 import './Navbar.css';
 
 export const Navbar = ({ title, onLogout, user, onMenuToggle }) => (
@@ -21,6 +22,7 @@ export const Navbar = ({ title, onLogout, user, onMenuToggle }) => (
           <span className="navbar__email">{user.email}</span>
         </div>
       )}
+      {title === 'Admin' && <AdminNotificationBell />}
       {title === 'Delivery' && <NotificationBell />}
       <InstallButton />
       <button className="navbar__logout" onClick={onLogout}>

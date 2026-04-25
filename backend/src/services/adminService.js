@@ -582,5 +582,18 @@ module.exports = {
   approveWithdrawal,
   rejectWithdrawal,
   getPlatformSettings,
-  updatePlatformSettings
+  updatePlatformSettings,
+
+  /**
+   * INTEGRATION POINT: Call this method whenever a seller creates a withdrawal request
+   * to notify all admins via push and DB notification.
+   */
+  notifyAdminOfWithdrawal: async (withdrawalId, shopName, amount) => {
+    try {
+      const adminNotificationService = require('./adminNotification.service');
+      await adminNotificationService.sendWithdrawalNotification(withdrawalId, shopName, amount);
+    } catch (err) {
+      logger.error(`[adminService] Failed to notify admins of withdrawal ${withdrawalId}:`, err);
+    }
+  }
 };

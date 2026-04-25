@@ -292,5 +292,49 @@ module.exports = {
   getPlatformSettings,
   updatePlatformSettings,
   getPartnerCash,
-  settleCash
+  settleCash,
+  // Notifications
+  getNotifications: async (req, res, next) => {
+    try {
+      const adminId = req.admin.id;
+      const data = await require('../services/adminNotification.service').getNotifications(adminId);
+      return res.json(formatResponse(data));
+    } catch (err) {
+      return next(err);
+    }
+  },
+  markNotificationRead: async (req, res, next) => {
+    try {
+      const adminId = req.admin.id;
+      const { id } = req.params;
+      const data = await require('../services/adminNotification.service').markAsRead(id, adminId);
+      return res.json(formatResponse(data, 'Notification marked as read'));
+    } catch (err) {
+      return next(err);
+    }
+  },
+  registerPushToken: async (req, res, next) => {
+    try {
+      const adminId = req.admin.id;
+      const { token, device_id, platform } = req.body;
+      const data = await require('../services/adminNotification.service').registerToken({
+        adminId,
+        fcm_token: token,
+        device_id,
+        platform
+      });
+      return res.json(formatResponse(data, 'Push token registered'));
+    } catch (err) {
+      return next(err);
+    }
+  },
+  removePushToken: async (req, res, next) => {
+    try {
+      const { token } = req.params;
+      await require('../services/adminNotification.service').removeToken(token);
+      return res.json(formatResponse(null, 'Push token removed'));
+    } catch (err) {
+      return next(err);
+    }
+  }
 };

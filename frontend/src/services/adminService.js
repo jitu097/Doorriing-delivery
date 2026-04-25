@@ -42,4 +42,10 @@ export const adminService = {
 
   getSettings:    ()        => apiClient.get('/admin/settings').then((r) => r.data.data),
   updateSettings: (payload) => apiClient.put('/admin/settings', payload).then((r) => r.data.data),
+
+  // Notifications
+  getNotifications: () => apiClient.get('/admin/notifications').then((r) => r.data.data),
+  markAsRead: (id) => apiClient.patch(`/admin/notifications/${id}/read`).then((r) => r.data.data),
+  registerPushToken: (payload) => apiClient.post('/admin/notifications/tokens', payload).then((r) => r.data.data),
+  removePushToken: (token) => apiClient.delete(`/admin/notifications/tokens/${token}`).then((r) => r.data.data),
 };

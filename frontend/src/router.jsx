@@ -5,6 +5,8 @@ import { Loader } from './components/common/Loader';
 import { ROUTES } from './config/constants';
 import { useAuth } from './hooks/useAuth';
 import { NotificationProvider } from './context/NotificationProvider';
+import { AdminNotificationProvider } from './context/AdminNotificationProvider';
+import { OrderProvider } from './context/OrderProvider';
 import './router.css';
 
 // Lazy-loaded admin pages
@@ -16,6 +18,7 @@ const OrdersOverview   = lazy(() => import('./pages/admin/OrdersOverview').then(
 const DeliveryPartners = lazy(() => import('./pages/admin/DeliveryPartners').then((m) => ({ default: m.DeliveryPartners })));
 const PartnerCashDetails = lazy(() => import('./pages/admin/PartnerCashDetails').then((m) => ({ default: m.PartnerCashDetails })));
 const PlatformSettings = lazy(() => import('./pages/admin/PlatformSettings').then((m) => ({ default: m.PlatformSettings })));
+const AdminNotifications = lazy(() => import('./pages/admin/AdminNotificationsPage'));
 
 // Lazy-loaded delivery pages
 const DeliveryDashboard = lazy(() => import('./pages/delivery/DeliveryDashboard').then((m) => ({ default: m.DeliveryDashboard })));
@@ -51,7 +54,13 @@ const AdminRoute = () => {
   if (!adminUser) {
     return <Navigate to="/login" replace />;
   }
-  return <DashboardLayout title="Admin" links={adminLinks} onLogout={logout} user={adminUser} />;
+  return (
+    <AdminNotificationProvider>
+      <OrderProvider>
+        <DashboardLayout title="Admin" links={adminLinks} onLogout={logout} user={adminUser} />
+      </OrderProvider>
+    </AdminNotificationProvider>
+  );
 };
 
 const DeliveryRoute = () => {
@@ -63,7 +72,9 @@ const DeliveryRoute = () => {
   }
   return (
     <NotificationProvider>
-      <DashboardLayout title="Delivery" links={deliveryLinks} onLogout={logout} user={courier} />
+      <OrderProvider>
+        <DashboardLayout title="Delivery" links={deliveryLinks} onLogout={logout} user={courier} />
+      </OrderProvider>
     </NotificationProvider>
   );
 };
@@ -90,7 +101,8 @@ export const router = createBrowserRouter([
       { path: 'orders',             element: <Suspense fallback={<PageLoader />}><OrdersOverview /></Suspense> },
       { path: 'delivery-partners',      element: <Suspense fallback={<PageLoader />}><DeliveryPartners /></Suspense> },
       { path: 'delivery-partners/:id/cash', element: <Suspense fallback={<PageLoader />}><PartnerCashDetails /></Suspense> },
-      { path: 'settings',               element: <Suspense fallback={<PageLoader />}><PlatformSettings /></Suspense> }
+      { path: 'settings',               element: <Suspense fallback={<PageLoader />}><PlatformSettings /></Suspense> },
+      { path: 'notifications',          element: <Suspense fallback={<PageLoader />}><AdminNotifications /></Suspense> }
     ]
   },
   {

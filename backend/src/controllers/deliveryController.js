@@ -162,7 +162,7 @@ const saveDeliveryToken = async (req, res, next) => {
         role: 'delivery',
         last_used_at: new Date()
       }, {
-        onConflict: 'fcm_token'
+        onConflict: 'delivery_partner_id, device_id'
       })
       .select()
       .single();
