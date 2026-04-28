@@ -18,6 +18,9 @@ router.post('/login', validateBody('deliveryLogin'), deliveryController.login);
 // -------------------------------------------------------------------------
 router.use(deliveryAuthMiddleware);
 
+// GET  /api/delivery/profile  — fetch current profile with delivery status
+router.get('/profile', deliveryController.getProfile);
+
 // GET  /api/delivery/orders  — list active assigned orders for this partner
 router.get('/orders', deliveryController.getAssignedOrders);
 
@@ -29,6 +32,13 @@ router.patch(
   '/assignments/:assignmentId/status',
   validateBody('updateAssignmentStatus'),
   deliveryController.updateAssignmentStatus
+);
+
+// PATCH /api/delivery/status  { delivery_status: "online" | "offline" }
+router.patch(
+  '/status',
+  validateBody('updateDeliveryStatus'),
+  deliveryController.updateStatus
 );
 
 // GET /api/delivery/history  — completed deliveries for this partner

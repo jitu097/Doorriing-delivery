@@ -3,6 +3,11 @@ import apiClient from './apiClient';
 export const deliveryService = {
   login: (creds) => apiClient.post('/delivery/login', creds),
 
+  getProfile: () => apiClient.get('/delivery/profile').then((r) => r.data.data),
+
+  updateDeliveryStatus: (delivery_status) =>
+    apiClient.patch('/delivery/status', { delivery_status }).then((r) => r.data.data),
+
   getAssignedOrders: () => apiClient.get('/delivery/orders').then((r) => r.data.data),
 
   getAssignedOnly: () => apiClient.get('/delivery/assigned-orders?status=assigned').then((r) => r.data.data),
@@ -23,9 +28,43 @@ export const deliveryService = {
   getHistory: () => apiClient.get('/delivery/history').then((r) => r.data.data),
 
   // Notifications
-  getNotifications: () => apiClient.get('/delivery/notifications').then((r) => r.data.data),
-  getUnreadCount:  () => apiClient.get('/delivery/notifications/unread-count').then((r) => r.data.data.count),
-  markAsRead:      (id) => apiClient.patch(`/delivery/notifications/${id}/read`).then((r) => r.data.data),
-  markAllNotificationsRead: () => apiClient.patch('/delivery/notifications/read-all').then((r) => r.data.data),
+  getNotifications: () => {
+    console.log('[deliveryService] 🔔 Calling getNotifications API...');
+    return apiClient.get('/delivery/notifications').then((r) => {
+      console.log('[deliveryService] ✅ API Response:', r.data);
+      console.log('[deliveryService] ✅ Notifications data:', r.data.data);
+      return r.data.data;
+    }).catch((err) => {
+      console.error('[deliveryService] ❌ API Error:', err.message);
+      throw err;
+    });
+  },
+
+  getUnreadCount:  () => {
+    console.log('[deliveryService] 📊 Calling getUnreadCount API...');
+    return apiClient.get('/delivery/notifications/unread-count').then((r) => {
+      console.log('[deliveryService] ✅ Unread count response:', r.data.data);
+      return r.data.data.count;
+    }).catch((err) => {
+      console.error('[deliveryService] ❌ Unread count error:', err.message);
+      throw err;
+    });
+  },
+
+  markAsRead:      (id) => {
+    console.log('[deliveryService] 📝 Marking notification as read:', id);
+    return apiClient.patch(`/delivery/notifications/${id}/read`).then((r) => {
+      console.log('[deliveryService] ✅ Marked as read');
+      return r.data.data;
+    });
+  },
+
+  markAllNotificationsRead: () => {
+    console.log('[deliveryService] 📝 Marking all notifications as read...');
+    return apiClient.patch('/delivery/notifications/read-all').then((r) => {
+      console.log('[deliveryService] ✅ All marked as read');
+      return r.data.data;
+    });
+  },
 };
 

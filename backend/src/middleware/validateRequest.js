@@ -36,6 +36,12 @@ const schemas = {
       .required()
   }),
 
+  updateDeliveryStatus: Joi.object({
+    delivery_status: Joi.string()
+      .valid('online', 'offline')
+      .required()
+  }),
+
   updatePlatformSettings: Joi.object({
     min_order_amount:   Joi.number().min(0).optional(),
     delivery_fee:       Joi.number().min(0).optional(),

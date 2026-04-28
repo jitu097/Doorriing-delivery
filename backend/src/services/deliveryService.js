@@ -34,7 +34,7 @@ const login = async ({ email, password }) => {
     password === env.TEMP_DELIVERY_PASSWORD
   ) {
     const token = signToken({ id: TEMP_ID, email, role: 'delivery' });
-    return { token, partner: { id: TEMP_ID, name: 'Test Rider', email, role: 'delivery' } };
+    return { token, partner: { id: TEMP_ID, name: 'Test Rider', email, role: 'delivery', delivery_status: 'online' } };
   }
   // -----------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ const login = async ({ email, password }) => {
 
   const { data: partner, error } = await supabase
     .from('delivery_partners')
-    .select('id, name, email, phone, password_hash, vehicle_type, is_active')
+    .select('id, name, email, phone, password_hash, vehicle_type, is_active, delivery_status')
     .eq('email', email)
     .eq('is_active', true)
     .single();
@@ -59,7 +59,8 @@ const login = async ({ email, password }) => {
       id: partner.id,
       name: partner.name,
       email: partner.email,
-      vehicle_type: partner.vehicle_type
+      vehicle_type: partner.vehicle_type,
+      delivery_status: partner.delivery_status || 'online'
     }
   };
 };
@@ -240,6 +241,44 @@ const getDeliveryHistory = async (deliveryPartnerId) => {
   return data;
 };
 
+const getDeliveryProfile = async (deliveryPartnerId) => {
+  if (!UUID_RE.test(deliveryPartnerId)) {
+    throw createError(400, 'Invalid delivery partner ID');
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('delivery_partners')
+    .select('id, name, email, phone, vehicle_type, is_active, delivery_status')
+    .eq('id', deliveryPartnerId)
+    .single();
+
+  if (error || !data) throw createError(404, 'Delivery partner not found');
+  return data;
+};
+
+const updateDeliveryStatus = async (deliveryPartnerId, deliveryStatus) => {
+  if (!UUID_RE.test(deliveryPartnerId)) {
+    throw createError(400, 'Invalid delivery partner ID');
+  }
+
+  const validStatuses = ['online', 'offline'];
+  if (!validStatuses.includes(deliveryStatus)) {
+    throw createError(400, `Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('delivery_partners')
+    .update({ delivery_status: deliveryStatus })
+    .eq('id', deliveryPartnerId)
+    .select('id, name, email, delivery_status')
+    .single();
+
+  if (error || !data) throw createError(500, error?.message || 'Failed to update delivery status');
+  return data;
+};
+
 const getNotifications = async (deliveryPartnerId) => {
   if (!UUID_RE.test(deliveryPartnerId)) return [];
 
@@ -291,12 +330,14 @@ const markAllNotificationsAsRead = async (deliveryPartnerId) => {
   return true;
 };
 
-module.exports = { 
-  login, 
-  getAssignedOrders, 
-  updateAssignmentStatus, 
-  updateOrderStatus, 
-  getDeliveryHistory, 
+module.exports = {
+  login,
+  getAssignedOrders,
+  updateAssignmentStatus,
+  updateOrderStatus,
+  getDeliveryHistory,
+  getDeliveryProfile,
+  updateDeliveryStatus,
   getNotifications,
   getUnreadCount,
   markAsRead,

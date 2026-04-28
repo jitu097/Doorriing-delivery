@@ -259,7 +259,9 @@ const getDeliveryPartners = async () => {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('delivery_partners')
-    .select('id, name, email, phone, vehicle_type, is_active, created_at')
+    .select('id, name, email, phone, vehicle_type, is_active, delivery_status, created_at')
+    .eq('delivery_status', 'online')
+    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
   if (error) throw createError(500, error.message);
@@ -320,7 +322,22 @@ const assignDeliveryPartner = async (orderId, deliveryPartnerId) => {
 
   if (existing) throw createError(409, 'Order already has an active delivery assignment');
 
-  // Guard 2: reject if the delivery partner already has an active 'assigned' order
+  // Guard 2: reject if the delivery partner is offline
+  const { data: partner } = await supabase
+    .from('delivery_partners')
+    .select('id, delivery_status, is_active')
+    .eq('id', deliveryPartnerId)
+    .maybeSingle();
+
+  if (!partner || !partner.is_active) {
+    throw createError(404, 'Delivery partner not found or is inactive');
+  }
+
+  if (partner.delivery_status !== 'online') {
+    throw createError(409, 'Cannot assign order to offline delivery partner');
+  }
+
+  // Guard 3: reject if the delivery partner already has an active 'assigned' order
   const { data: partnerExisting } = await supabase
     .from('order_delivery_assignments')
     .select('id')

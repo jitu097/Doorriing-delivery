@@ -204,6 +204,30 @@ const deleteDeliveryToken = async (req, res, next) => {
   }
 };
 
+// GET /api/delivery/profile
+const getProfile = async (req, res, next) => {
+  try {
+    const profile = await deliveryService.getDeliveryProfile(req.deliveryPartner.id);
+    return res.json(formatResponse(profile));
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// PATCH /api/delivery/status  { delivery_status: "online" | "offline" }
+const updateStatus = async (req, res, next) => {
+  try {
+    const { delivery_status } = req.body;
+    const updated = await deliveryService.updateDeliveryStatus(
+      req.deliveryPartner.id,
+      delivery_status
+    );
+    return res.json(formatResponse(updated, 'Delivery status updated'));
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // GET /api/delivery/notifications
 const getNotifications = async (req, res, next) => {
   try {
@@ -253,6 +277,8 @@ module.exports = {
   delivered,
   saveDeliveryToken,
   deleteDeliveryToken,
+  getProfile,
+  updateStatus,
   getNotifications,
   getUnreadCount,
   markAsRead,

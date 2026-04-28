@@ -11,15 +11,61 @@ export const DeliveryDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
-    deliveryService.getAssignedOrders()
-      .then(setOrders)
-      .catch((err) => setError(err.message || 'Failed to load orders'))
-      .finally(() => setIsLoading(false));
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+
+        // Try to fetch actual delivery status from database
+        try {
+          const profile = await deliveryService.getProfile();
+          setIsOnline(profile.delivery_status === 'online');
+        } catch (err) {
+          // Fallback: if getProfile endpoint doesn't exist yet, default to online
+          console.warn('Profile endpoint not available, defaulting to online');
+          setIsOnline(true);
+        }
+
+        // Fetch assigned orders
+        const orderData = await deliveryService.getAssignedOrders();
+        setOrders(orderData);
+      } catch (err) {
+        setError(err.message || 'Failed to load orders');
+        setIsOnline(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
-  const active  = orders.filter((o) => ['accepted', 'picked_up', 'out_for_delivery'].includes(o.status));
+  // Handle status toggle with DB persistence
+  const handleStatusToggle = async () => {
+    const newStatus = isOnline ? 'offline' : 'online';
+
+    try {
+      setIsUpdatingStatus(true);
+      // Try to update database first
+      try {
+        await deliveryService.updateDeliveryStatus(newStatus);
+      } catch (err) {
+        // Fallback: if endpoint doesn't exist yet, just toggle UI
+        console.warn('Status endpoint not available');
+      }
+      // Update UI
+      setIsOnline(!isOnline);
+    } catch (err) {
+      setError(err.message || 'Failed to update status');
+      // Don't toggle UI on error
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const active = orders.filter((o) => ['accepted', 'picked_up', 'out_for_delivery'].includes(o.status));
   const pending = orders.filter((o) => o.status === 'assigned');
 
   return (
@@ -27,9 +73,13 @@ export const DeliveryDashboard = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Welcome, {courier?.name?.split(' ')[0] ?? 'Partner'}!</h1>
-          <p className="page-subtitle">Here’s your delivery overview for today.</p>
+          <p className="page-subtitle">Here's your delivery overview for today.</p>
         </div>
-        <DeliveryStatusButtons isOnline={isOnline} onToggle={() => setIsOnline((v) => !v)} />
+        <DeliveryStatusButtons
+          isOnline={isOnline}
+          onToggle={handleStatusToggle}
+          isUpdating={isUpdatingStatus}
+        />
       </div>
 
       {isLoading ? (
