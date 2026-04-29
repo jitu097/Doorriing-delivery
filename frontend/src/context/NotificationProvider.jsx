@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { messaging, getToken, onMessage, VAPID_KEY, isConfigPlaceholder, isVapidPlaceholder } from '../config/firebase';
+import { supabase } from '../config/supabaseClient';
 import apiClient from '../services/apiClient';
 import { deliveryService } from '../services/deliveryService';
 import { useAuth } from '../hooks/useAuth';
@@ -56,6 +57,46 @@ export const NotificationProvider = ({ children }) => {
       setCurrentIncomingOrder(null);
     }
   }, [courier, fetchActiveAssignment, fetchHistory]);
+
+  // Real-time polling fallback (every 3 seconds)
+  useEffect(() => {
+    if (!courier) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        // Fetch active assignments (Incoming Order Card)
+        const response = await apiClient.get('/delivery/assigned-orders?status=assigned');
+        const assigned = response.data.data;
+        
+        let hasNewAssignment = false;
+        if (assigned && assigned.length > 0) {
+          // If assignment changed or new assignment appeared, we need to update
+          setCurrentIncomingOrder(prev => {
+            if (!prev || prev.id !== assigned[0].id) {
+              hasNewAssignment = true;
+            }
+            return assigned[0];
+          });
+        } else {
+          setCurrentIncomingOrder(null);
+        }
+
+        // Fetch unread count to see if we need to refresh history (Bell Notification)
+        const count = await deliveryService.getUnreadCount();
+        setUnreadCount(prevCount => {
+          if (prevCount !== count || hasNewAssignment) {
+            // New notifications detected, refresh the history list
+            fetchHistory();
+          }
+          return count;
+        });
+      } catch (err) {
+        // Silent fail on polling to avoid console spam
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [courier, fetchHistory]);
 
   // FCM Setup
   useEffect(() => {

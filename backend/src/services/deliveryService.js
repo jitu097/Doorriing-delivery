@@ -310,7 +310,7 @@ const markAsRead = async (notificationId, deliveryPartnerId) => {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('delivery_notifications')
-    .update({ is_read: true, read_at: new Date().toISOString() })
+    .update({ is_read: true })
     .eq('id', notificationId)
     .eq('delivery_partner_id', deliveryPartnerId)
     .select()
@@ -323,7 +323,7 @@ const markAllNotificationsAsRead = async (deliveryPartnerId) => {
   const supabase = getSupabaseClient();
   const { error } = await supabase
     .from('delivery_notifications')
-    .update({ is_read: true, read_at: new Date().toISOString() })
+    .update({ is_read: true })
     .eq('delivery_partner_id', deliveryPartnerId)
     .eq('is_read', false);
   if (error) throw createError(500, error.message);
