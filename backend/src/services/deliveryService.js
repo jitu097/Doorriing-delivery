@@ -85,10 +85,15 @@ const getAssignedOrders = async (deliveryPartnerId) => {
         id,
         total_amount,
         created_at,
+        customer_notes,
         shops ( id, name, address, phone ),
         customers (
           id, full_name, phone,
           customer_addresses ( id, address_line_1, address_line_2, city, state, pincode, landmark, phone, is_default )
+        ),
+        order_items (
+          quantity,
+          items ( name, unit, base_quantity )
         )
       )
     `)

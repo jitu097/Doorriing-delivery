@@ -48,6 +48,13 @@ export const DeliveryOrderCard = memo(({ order, onRefresh }) => {
   // phone: prefer customer record, fall back to address phone
   const customerPhone = customer.phone || addr?.phone || null;
 
+  const orderItems   = orderData.order_items || [];
+  const specialNotes = orderData.customer_notes || '';
+
+  // Debugging logs as requested
+  console.log("Assigned order response:", order);
+  console.log("Order items:", orderItems);
+
   // Prefer orders.id (the actual order id) for the API call
   const orderId = orderData.id || order.order_id;
 
@@ -122,6 +129,46 @@ export const DeliveryOrderCard = memo(({ order, onRefresh }) => {
               </svg>
               Navigate to Shop
             </button>
+          )}
+        </div>
+
+        {/* ── Items Section ── */}
+        <div className="dorder-card__section">
+          <p className="dorder-card__section-label dorder-card__section-label--items">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+            Items To Pickup
+          </p>
+
+          {orderItems.length === 0 ? (
+            <p className="dorder-card__info-line dorder-card__info-line--muted">No item details available</p>
+          ) : (
+            <ul className="dorder-card__items-list">
+              {orderItems.map((item, idx) => {
+                const itemName = item.items?.name || 'Unknown Item';
+                const variant = item.items?.unit || '';
+                const qty = item.quantity || 1;
+                return (
+                  <li key={idx} className="dorder-card__item">
+                    <span className="dorder-card__item-bullet">•</span> 
+                    <span className="dorder-card__item-name">
+                      {itemName} {variant && <span className="dorder-card__item-variant">({variant})</span>}
+                    </span>
+                    <span className="dorder-card__item-qty">— Qty: {qty}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {specialNotes && (
+            <div className="dorder-card__special-notes">
+              <strong>Special Instructions:</strong>
+              <p>{specialNotes}</p>
+            </div>
           )}
         </div>
 
