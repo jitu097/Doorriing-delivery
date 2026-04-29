@@ -201,3 +201,121 @@
   }
 }
 
+/* ── Payment Modal ── */
+.payment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+
+.payment-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  animation: modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.payment-modal-title {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.payment-modal-order {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0 0 16px 0;
+}
+
+.payment-modal-instruction {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 4px 0;
+}
+
+.payment-modal-amount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #10b981;
+  margin: 0 0 12px 0;
+  line-height: 1;
+}
+
+.payment-modal-method {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  margin: 0 0 16px 0;
+}
+
+.payment-modal-alert {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 24px;
+}
+
+.payment-modal-alert--success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.payment-modal-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.payment-modal-actions .btn {
+  width: 100%;
+}
+
+/* ── Inline Payment ── */
+.dorder-card__payment-inline {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.dorder-card__payment-inline--cod {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.dorder-card__payment-inline--cod .dorder-card__payment-value {
+  color: #059669;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.dorder-card__payment-inline--online {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}

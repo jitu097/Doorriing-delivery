@@ -36,6 +36,7 @@ const openInMaps = (query) => {
 export const DeliveryOrderCard = memo(({ order, onRefresh }) => {
   const [busy, setBusy]   = useState(false);
   const [error, setError] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const cfg          = STATUS_CONFIG[order.status];
   const orderData    = order.orders || {};
@@ -50,6 +51,10 @@ export const DeliveryOrderCard = memo(({ order, onRefresh }) => {
 
   const orderItems   = orderData.order_items || [];
   const specialNotes = orderData.customer_notes || '';
+
+  const paymentMethod = orderData.payment_method?.toUpperCase() || 'COD';
+  const paymentStatus = orderData.payment_status || 'pending';
+  const totalAmount   = Number(orderData.total_amount || 0);
 
   // Debugging logs as requested
   console.log("Assigned order response:", order);
@@ -69,13 +74,27 @@ export const DeliveryOrderCard = memo(({ order, onRefresh }) => {
     setError(null);
     try {
       await deliveryService[cfg.method](orderId);
-      onRefresh?.();
+      
+      if (cfg.method === 'markDelivered') {
+        console.log("Payment Method:", paymentMethod);
+        console.log("Paid Amount:", paymentStatus === 'paid' ? totalAmount : 0);
+        console.log("Pending COD:", paymentMethod === 'COD' && paymentStatus !== 'paid' ? totalAmount : 0);
+        console.log("Opening COD popup");
+        setShowPaymentModal(true);
+      } else {
+        onRefresh?.();
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Something went wrong');
     } finally {
       setBusy(false);
     }
-  }, [cfg, orderId, onRefresh]);
+  }, [cfg, orderId, onRefresh, paymentMethod, paymentStatus, totalAmount]);
+
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    onRefresh?.();
+  };
 
   return (
     <div className="dorder-card">
@@ -215,6 +234,16 @@ export const DeliveryOrderCard = memo(({ order, onRefresh }) => {
               Navigate to Customer
             </button>
           )}
+
+          {/* Inline Payment Info */}
+          <div className={`dorder-card__payment-inline ${paymentMethod === 'COD' && paymentStatus !== 'paid' ? 'dorder-card__payment-inline--cod' : 'dorder-card__payment-inline--online'}`}>
+            <span className="dorder-card__payment-label">
+              {paymentMethod === 'COD' && paymentStatus !== 'paid' ? 'To Collect:' : 'Payment:'}
+            </span>
+            <span className="dorder-card__payment-value">
+              {paymentMethod === 'COD' && paymentStatus !== 'paid' ? `₹${totalAmount.toFixed(2)}` : 'Paid Online'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -227,6 +256,38 @@ export const DeliveryOrderCard = memo(({ order, onRefresh }) => {
           <Button variant={cfg.variant} size="sm" isLoading={busy} onClick={handleAction}>
             {cfg.label}
           </Button>
+        </div>
+      )}
+
+      {/* ── Payment Modal ── */}
+      {showPaymentModal && (
+        <div className="payment-modal-overlay">
+          <div className="payment-modal">
+            <h3 className="payment-modal-title">Cash to Collect</h3>
+            <p className="payment-modal-order">Order #{(orderId || order.id)?.slice(-8)}</p>
+            
+            {paymentMethod === 'COD' && paymentStatus !== 'paid' ? (
+              <>
+                <p className="payment-modal-instruction">Collect from customer:</p>
+                <div className="payment-modal-amount">₹{totalAmount.toFixed(2)}</div>
+                <p className="payment-modal-method">Payment Method: Cash on Delivery</p>
+                <div className="payment-modal-alert">
+                  <strong>Please collect full amount at delivery.</strong>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="payment-modal-method">Payment Status: Paid Online</div>
+                <div className="payment-modal-alert payment-modal-alert--success">
+                  <strong>No cash collection required</strong>
+                </div>
+              </>
+            )}
+
+            <div className="payment-modal-actions">
+              <Button variant="primary" onClick={closePaymentModal}>Confirm</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
