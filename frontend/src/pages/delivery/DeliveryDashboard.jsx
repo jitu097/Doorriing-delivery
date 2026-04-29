@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { deliveryService } from '../../services/deliveryService';
 import { DeliveryStatusButtons } from '../../components/delivery/DeliveryStatusButtons';
 import { Loader } from '../../components/common/Loader';
 import { useAuth } from '../../hooks/useAuth';
+import { ROUTES } from '../../config/constants';
 import './DeliveryDashboard.css';
 
 export const DeliveryDashboard = () => {
   const { courier } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -86,15 +89,27 @@ export const DeliveryDashboard = () => {
         <Loader label="Loading orders..." />
       ) : (
         <div className="ddash-stats">
-          <div className="ddash-stat">
+          <div 
+            className="ddash-stat" 
+            onClick={() => navigate(ROUTES.delivery.assigned)}
+            style={{ cursor: 'pointer' }}
+          >
             <p className="ddash-stat__value">{pending.length}</p>
             <p className="ddash-stat__label">New Assignments</p>
           </div>
-          <div className="ddash-stat ddash-stat--active">
+          <div 
+            className="ddash-stat ddash-stat--active"
+            onClick={() => navigate(ROUTES.delivery.assigned)}
+            style={{ cursor: 'pointer' }}
+          >
             <p className="ddash-stat__value">{active.length}</p>
             <p className="ddash-stat__label">In Progress</p>
           </div>
-          <div className="ddash-stat ddash-stat--done">
+          <div 
+            className="ddash-stat ddash-stat--done"
+            onClick={() => navigate(ROUTES.delivery.history)}
+            style={{ cursor: 'pointer' }}
+          >
             <p className="ddash-stat__value">{orders.filter((o) => o.status === 'delivered').length}</p>
             <p className="ddash-stat__label">Delivered Today</p>
           </div>

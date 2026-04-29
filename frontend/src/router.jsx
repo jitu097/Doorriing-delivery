@@ -43,7 +43,6 @@ const adminLinks = [
 const deliveryLinks = [
   { to: ROUTES.delivery.dashboard, label: 'Overview' },
   { to: ROUTES.delivery.assigned,  label: 'Assigned' },
-  { to: ROUTES.delivery.active,    label: 'Active' },
   { to: ROUTES.delivery.history,   label: 'History' }
 ];
 
@@ -109,7 +108,7 @@ export const router = createBrowserRouter([
     path: '/delivery',
     element: <DeliveryRoute />,
     children: [
-      { index: true, element: <Navigate to={ROUTES.delivery.dashboard} replace /> },
+      { index: true, element: <Navigate to={ROUTES.delivery.assigned} replace /> },
       { path: 'dashboard', element: <Suspense fallback={<PageLoader />}><DeliveryDashboard /></Suspense> },
       { path: 'assigned',  element: <Suspense fallback={<PageLoader />}><AssignedOrders /></Suspense> },
       { path: 'active',    element: <Suspense fallback={<PageLoader />}><ActiveDeliveries /></Suspense> },

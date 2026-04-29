@@ -43,7 +43,7 @@
 .notification-bell__dropdown {
   position: absolute;
   top: 100%;
-  right: 0;
+  right: -10px; /* Shift slightly right on desktop */
   width: 320px;
   background-color: white;
   border-radius: 12px;
@@ -55,6 +55,18 @@
   max-height: 480px;
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 480px) {
+  .notification-bell__dropdown {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 92vw;
+    max-width: 360px;
+  }
 }
 
 .notification-bell__header {
