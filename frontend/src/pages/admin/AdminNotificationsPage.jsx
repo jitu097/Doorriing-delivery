@@ -47,9 +47,11 @@ const AdminNotificationsPage = () => {
                       <h3 className={`text-base ${!n.is_read ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
                         {n.title}
                       </h3>
-                      <span className="text-xs text-slate-400 font-medium whitespace-nowrap ml-4">
-                        {dayjs(n.created_at).format('MMM D, h:mm A')}
-                      </span>
+                      {n.created_at && dayjs(n.created_at).isValid() && (
+                        <span className="text-xs text-slate-400 font-medium whitespace-nowrap ml-4">
+                          {dayjs(n.created_at).format('MMM D, h:mm A')}
+                        </span>
+                      )}
                     </div>
                     <p className="text-slate-600 mt-1 text-sm leading-relaxed max-w-2xl">
                       {n.body}

@@ -35,6 +35,15 @@ export const AdminNotificationProvider = ({ children }) => {
     }
   }, [adminUser, fetchNotifications]);
 
+  // Polling fallback
+  useEffect(() => {
+    if (!adminUser) return;
+    const intervalId = setInterval(() => {
+      fetchNotifications();
+    }, 10000); // 10 seconds
+    return () => clearInterval(intervalId);
+  }, [adminUser, fetchNotifications]);
+
   // FCM Setup for Admin
   useEffect(() => {
     if (!adminUser) return;

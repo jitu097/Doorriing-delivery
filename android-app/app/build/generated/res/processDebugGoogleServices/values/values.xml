@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="gcm_defaultSenderId" translatable="false">123456789</string>
-    <string name="google_api_key" translatable="false">placeholder_api_key</string>
-    <string name="google_app_id" translatable="false">1:123456789:android:placeholder</string>
-    <string name="google_crash_reporting_api_key" translatable="false">placeholder_api_key</string>
-    <string name="google_storage_bucket" translatable="false">doorriing-delivery-placeholder.appspot.com</string>
-    <string name="project_id" translatable="false">doorriing-delivery-placeholder</string>
+    <string name="default_web_client_id" translatable="false">1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">1049973675081</string>
+    <string name="google_api_key" translatable="false">AIzaSyAZkLZFN8UYJUwR72nvVYaezLOZjhARioM</string>
+    <string name="google_app_id" translatable="false">1:1049973675081:android:d894c2a074488369ab5b98</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAZkLZFN8UYJUwR72nvVYaezLOZjhARioM</string>
+    <string name="google_storage_bucket" translatable="false">bazarse-d4963.firebasestorage.app</string>
+    <string name="project_id" translatable="false">bazarse-d4963</string>
 </resources>

@@ -2010,6 +2010,7 @@
     <string name="common_open_on_phone">Open on phone</string>
     <string name="common_signin_button_text">Sign in</string>
     <string name="common_signin_button_text_long">Sign in with Google</string>
+    <string name="default_web_client_id" translatable="false">1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com</string>
     <string description="Screen reader announcement for when a checkbox is on error. [CHAR LIMIT=NONE]" name="error_a11y_label">
     Error: invalid
   </string>
@@ -2018,11 +2019,11 @@
     <string name="fab_transformation_scrim_behavior" translatable="false">com.google.android.material.transformation.FabTransformationScrimBehavior</string>
     <string name="fab_transformation_sheet_behavior" translatable="false">com.google.android.material.transformation.FabTransformationSheetBehavior</string>
     <string name="fcm_fallback_notification_channel_label">Miscellaneous</string>
-    <string name="gcm_defaultSenderId" translatable="false">123456789</string>
-    <string name="google_api_key" translatable="false">placeholder_api_key</string>
-    <string name="google_app_id" translatable="false">1:123456789:android:placeholder</string>
-    <string name="google_crash_reporting_api_key" translatable="false">placeholder_api_key</string>
-    <string name="google_storage_bucket" translatable="false">doorriing-delivery-placeholder.appspot.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">1049973675081</string>
+    <string name="google_api_key" translatable="false">AIzaSyAZkLZFN8UYJUwR72nvVYaezLOZjhARioM</string>
+    <string name="google_app_id" translatable="false">1:1049973675081:android:d894c2a074488369ab5b98</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAZkLZFN8UYJUwR72nvVYaezLOZjhARioM</string>
+    <string name="google_storage_bucket" translatable="false">bazarse-d4963.firebasestorage.app</string>
     <string name="hide_bottom_view_on_scroll_behavior" translatable="false">com.google.android.material.behavior.HideBottomViewOnScrollBehavior</string>
     <string description="Content description for an icon that appears in the title area of a dialog" name="icon_content_description">Dialog Icon</string>
     <string name="item_view_role_description">Tab</string>
@@ -2137,7 +2138,7 @@
     <string name="path_password_eye_mask_strike_through" translatable="false">M2,4.27 L19.73,22 L22.27,19.46 L4.54,1.73 L4.54,1 L23,1 L23,23 L1,23 L1,4.27 Z</string>
     <string name="path_password_eye_mask_visible" translatable="false">M2,4.27 L2,4.27 L4.54,1.73 L4.54,1.73 L4.54,1 L23,1 L23,23 L1,23 L1,4.27 Z</string>
     <string name="path_password_strike_through" translatable="false">M3.27,4.27 L19.74,20.74</string>
-    <string name="project_id" translatable="false">doorriing-delivery-placeholder</string>
+    <string name="project_id" translatable="false">bazarse-d4963</string>
     <string name="search_menu_title">Search</string>
     <string name="searchbar_scrolling_view_behavior" translatable="false">
     com.google.android.material.search.SearchBar$ScrollingViewBehavior

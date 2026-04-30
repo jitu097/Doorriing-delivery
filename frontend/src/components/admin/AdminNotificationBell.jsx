@@ -51,7 +51,7 @@ export const AdminNotificationBell = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed top-[64px] left-1/2 -translate-x-1/2 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:-translate-x-0 mt-2 w-[calc(100vw-32px)] sm:w-80 max-w-sm bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <h3 className="font-semibold text-slate-800">Admin Alerts</h3>
             <button 
@@ -80,9 +80,11 @@ export const AdminNotificationBell = () => {
                     <p className="text-xs text-slate-500 mt-1 line-clamp-2">
                       {n.body}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-2 font-medium">
-                      {dayjs(n.created_at).fromNow()}
-                    </p>
+                    {n.created_at && dayjs(n.created_at).isValid() && (
+                      <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                        {dayjs(n.created_at).fromNow()}
+                      </p>
+                    )}
                   </div>
                   {!n.is_read && (
                     <div className="h-2 w-2 rounded-full bg-indigo-500 mt-2 flex-shrink-0" />

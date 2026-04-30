@@ -190,6 +190,8 @@ const registerToken = async ({ adminId, fcm_token, device_id, platform }) => {
       device_id,
       platform,
       created_at: new Date().toISOString()
+    }, {
+      onConflict: 'admin_id, device_id'
     })
     .select()
     .single();
@@ -198,6 +200,9 @@ const registerToken = async ({ adminId, fcm_token, device_id, platform }) => {
     logger.error('[AdminNotification] Error registering token:', error);
     throw error;
   }
+  
+  console.log("Admin FCM token upsert success");
+  
   return data;
 };
 
