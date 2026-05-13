@@ -1,5 +1,6 @@
 import { createContext, useState, useMemo, useEffect, useCallback } from 'react';
 import apiClient from '../services/apiClient';
+import { parseJwtPayload } from '../utils/jwt';
 
 export const AuthContext = createContext(null);
 
@@ -23,13 +24,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp * 1000 > Date.now()) {
-        setUser({ 
-          id: payload.id, 
-          email: payload.email, 
-          role: payload.role, 
-          token 
+      const payload = parseJwtPayload(token);
+      if (payload?.exp && payload.exp * 1000 > Date.now()) {
+        setUser({
+          id: payload.id,
+          email: payload.email,
+          role: payload.role,
+          token
         });
       } else {
         localStorage.removeItem(ADMIN_STORAGE_KEY);
