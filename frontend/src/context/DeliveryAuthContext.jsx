@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import apiClient from '../services/apiClient';
-import { parseJwtPayload } from '../utils/jwt';
 import './DeliveryAuthContext.css';
 
 const STORAGE_KEY = 'bz_delivery_token';
@@ -15,10 +14,14 @@ export const DeliveryAuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem(STORAGE_KEY);
     if (!token) return;
-    const payload = parseJwtPayload(token);
-    if (payload?.exp && payload.exp * 1000 > Date.now()) {
-      setCourier({ id: payload.id, email: payload.email, role: payload.role, token });
-    } else {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp * 1000 > Date.now()) {
+        setCourier({ id: payload.id, email: payload.email, role: payload.role, token });
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
