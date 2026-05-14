@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="notification_color">#FF6B00</color>
     <string name="app_name">Doorriing Delivery</string>
     <string name="default_web_client_id" translatable="false">1049973675081-tqglq1ml83fkei8nnheo2foq68nbl603.apps.googleusercontent.com</string>
     <string name="gcm_defaultSenderId" translatable="false">1049973675081</string>

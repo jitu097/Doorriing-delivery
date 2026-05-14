@@ -46,11 +46,48 @@ const deliveryLinks = [
   { to: ROUTES.delivery.history,   label: 'History' }
 ];
 
+// ─── Public Route Guard ────────────────────────────────────────────────────────
+// Wraps the /login page.
+// • While auth is being checked (isLoading) → show spinner (no flash of login UI)
+// • If user is already authenticated   → redirect to the correct dashboard
+// • If user is NOT authenticated        → show the login page
+const PublicRoute = () => {
+  const { adminUser, courier, isLoading } = useAuth();
+
+  // Auth check in progress — show spinner so login page never flashes
+  if (isLoading) {
+    console.log('[LOGIN_PERSIST] Auth check in progress — holding render');
+    return <PageLoader />;
+  }
+
+  // Already authenticated as admin
+  if (adminUser) {
+    console.log('[LOGIN_PERSIST] Redirecting to admin dashboard');
+    return <Navigate to={ROUTES.admin.dashboard} replace />;
+  }
+
+  // Already authenticated as delivery partner
+  if (courier) {
+    console.log('[LOGIN_PERSIST] Redirecting to delivery dashboard');
+    return <Navigate to={ROUTES.delivery.dashboard} replace />;
+  }
+
+  // Not authenticated — show login page
+  console.log('[LOGIN_PERSIST] Showing login page');
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Login />
+    </Suspense>
+  );
+};
+
+// ─── Admin Protected Route ─────────────────────────────────────────────────────
 const AdminRoute = () => {
   const { adminUser, logout, isLoading } = useAuth();
-  
+
   if (isLoading) return <PageLoader />;
   if (!adminUser) {
+    console.log('[LOGIN_PERSIST] AdminRoute: no session — redirecting to login');
     return <Navigate to="/login" replace />;
   }
   return (
@@ -62,11 +99,13 @@ const AdminRoute = () => {
   );
 };
 
+// ─── Delivery Protected Route ──────────────────────────────────────────────────
 const DeliveryRoute = () => {
   const { courier, logout, isLoading } = useAuth();
-  
+
   if (isLoading) return <PageLoader />;
   if (!courier) {
+    console.log('[LOGIN_PERSIST] DeliveryRoute: no session — redirecting to login');
     return <Navigate to="/login" replace />;
   }
   return (
@@ -79,15 +118,16 @@ const DeliveryRoute = () => {
 };
 
 export const router = createBrowserRouter([
+  // Root: redirect to login; PublicRoute will handle the bounce to dashboard
   { path: '/', element: <Navigate to="/login" replace /> },
+
+  // Login — guarded by PublicRoute (bounces authenticated users to their dashboard)
   {
     path: '/login',
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Login />
-      </Suspense>
-    )
+    element: <PublicRoute />,
   },
+
+  // Admin panel — guarded by AdminRoute
   {
     path: '/admin',
     element: <AdminRoute />,
@@ -104,6 +144,8 @@ export const router = createBrowserRouter([
       { path: 'notifications',          element: <Suspense fallback={<PageLoader />}><AdminNotifications /></Suspense> }
     ]
   },
+
+  // Delivery panel — guarded by DeliveryRoute
   {
     path: '/delivery',
     element: <DeliveryRoute />,

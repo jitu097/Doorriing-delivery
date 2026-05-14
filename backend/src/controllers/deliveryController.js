@@ -143,42 +143,65 @@ const delivered = async (req, res, next) => {
 const saveDeliveryToken = async (req, res, next) => {
   try {
     const { token, device_id, platform } = req.body;
-    const deliveryPartnerId = req.deliveryPartner.id;
+    const deliveryPartnerId = req.deliveryPartner?.id;
 
-    if (!token) throw createError(400, 'FCM token is required');
+    // ── Exhaustive debug logging ─────────────────────────────────────────
+    logger.info('[FCM_TOKEN] ─────────────────────────────────────────');
+    logger.info('[FCM_TOKEN] POST /api/delivery/push-token received');
+    logger.info(`[FCM_TOKEN] Authorization header present: ${!!req.headers.authorization}`);
+    logger.info(`[FCM_TOKEN] delivery_partner_id: ${deliveryPartnerId}`);
+    logger.info(`[FCM_TOKEN] device_id: ${device_id}`);
+    logger.info(`[FCM_TOKEN] platform: ${platform}`);
+    logger.info(`[FCM_TOKEN] FCM token length: ${token?.length ?? 'MISSING'}`);
+    logger.info(`[FCM_TOKEN] FCM token value: ${token ?? 'NULL'}`);
+
+    if (!token) {
+      logger.error('[FCM_TOKEN] REJECTED — FCM token is missing from request body');
+      throw createError(400, 'FCM token is required');
+    }
+
+    if (!deliveryPartnerId) {
+      logger.error('[FCM_TOKEN] REJECTED — delivery_partner_id is null (JWT decode failed?)');
+      throw createError(401, 'Unauthorized — delivery partner not identified');
+    }
 
     const supabase = getSupabaseClient();
 
-    // Upsert into delivery_notification_tokens
-    // onConflict: fcm_token (ensure this unique constraint exists in DB)
-    console.log("[push-token] Saving token:", token);
+    logger.info('[FCM_TOKEN] Upserting into delivery_notification_tokens...');
     const { data, error } = await supabase
       .from('delivery_notification_tokens')
-      .upsert({
-        fcm_token: token,
-        delivery_partner_id: deliveryPartnerId,
-        device_id: device_id || 'web',
-        platform: platform || 'web',
-        role: 'delivery',
-        last_used_at: new Date()
-      }, {
-        onConflict: 'delivery_partner_id, device_id'
-      })
+      .upsert(
+        {
+          fcm_token:           token,
+          delivery_partner_id: deliveryPartnerId,
+          device_id:           device_id || 'android',
+          platform:            platform  || 'android',
+          role:                'delivery',
+          last_used_at:        new Date().toISOString()
+        },
+        { onConflict: 'delivery_partner_id, device_id' }
+      )
       .select()
       .single();
 
     if (error) {
-      console.error("[push-token] Error:", error);
-      throw error;
+      logger.error(`[FCM_TOKEN] DB UPSERT FAILED — code: ${error.code}`);
+      logger.error(`[FCM_TOKEN] DB UPSERT FAILED — message: ${error.message}`);
+      logger.error(`[FCM_TOKEN] DB UPSERT FAILED — details: ${error.details}`);
+      logger.error(`[FCM_TOKEN] DB UPSERT FAILED — hint: ${error.hint}`);
+      throw createError(500, `Database error: ${error.message}`);
     }
 
-    console.log("[push-token] Success:", data);
+    logger.info(`[FCM_TOKEN] SUCCESS ✓ — token saved/updated for partner ${deliveryPartnerId}`);
+    logger.info(`[FCM_TOKEN] DB row id: ${data?.id}`);
+
     return res.json({
       success: true,
       message: 'Push token saved successfully',
       data
     });
   } catch (err) {
+    logger.error(`[FCM_TOKEN] UNHANDLED ERROR — ${err.message}`);
     return next(err);
   }
 };

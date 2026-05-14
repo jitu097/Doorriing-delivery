@@ -2085,6 +2085,7 @@ color mtrl_textinput_filled_box_default_background_color
 color mtrl_textinput_focused_box_stroke_color
 color mtrl_textinput_hovered_box_stroke_color
 color notification_action_color_filter
+color notification_color
 color notification_icon_bg_color
 color primary_dark_material_dark
 color primary_dark_material_light
@@ -3036,6 +3037,7 @@ drawable ic_mtrl_checked_circle
 drawable ic_mtrl_chip_checked_black
 drawable ic_mtrl_chip_checked_circle
 drawable ic_mtrl_chip_close_circle
+drawable ic_notification
 drawable ic_search_black_24
 drawable m3_avd_hide_password
 drawable m3_avd_show_password

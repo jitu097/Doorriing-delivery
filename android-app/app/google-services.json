@@ -96,6 +96,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1049973675081-8chruihch8m3v6dlmnjsposfvt00cn9p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.doorriing.user",
+            "certificate_hash": "270d63fa918c29108410fe934c3ad776365b167a"
+          }
+        },
+        {
           "client_id": "1049973675081-k2ucp9jvn1q5mcdfaucohidusdk0jqba.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
