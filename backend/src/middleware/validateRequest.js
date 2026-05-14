@@ -61,6 +61,15 @@ const schemas = {
     admin_note: Joi.string().max(500).allow('', null).optional()
   }),
 
+  updateAppAvailability: Joi.object({
+    is_app_enabled:      Joi.boolean().optional(),
+    delivery_start_time: Joi.string().pattern(/^\d{2}:\d{2}$/).optional()
+      .messages({ 'string.pattern.base': 'delivery_start_time must be in HH:MM format' }),
+    delivery_end_time:   Joi.string().pattern(/^\d{2}:\d{2}$/).optional()
+      .messages({ 'string.pattern.base': 'delivery_end_time must be in HH:MM format' }),
+    maintenance_message: Joi.string().max(300).allow('', null).optional()
+  }).min(1),
+
   saveDeliveryToken: Joi.object({
     token: Joi.string().required(),
     device_id: Joi.string().required(),

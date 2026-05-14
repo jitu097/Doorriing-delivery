@@ -8,6 +8,7 @@
 const { Router } = require('express');
 const { formatResponse } = require('../utils/responseFormatter');
 const adminService = require('../services/adminService');
+const appAvailabilityController = require('../controllers/appAvailabilityController');
 
 const router = Router();
 
@@ -21,5 +22,10 @@ router.get('/settings', async (req, res, next) => {
     return next(err);
   }
 });
+
+// GET /api/platform/availability
+// Returns live app availability status for User App polling (no auth).
+// Includes isCurrentlyOpen flag, delivery window, and message.
+router.get('/availability', appAvailabilityController.getAvailability);
 
 module.exports = router;

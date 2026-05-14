@@ -19,6 +19,7 @@ const DeliveryPartners = lazy(() => import('./pages/admin/DeliveryPartners').the
 const PartnerCashDetails = lazy(() => import('./pages/admin/PartnerCashDetails').then((m) => ({ default: m.PartnerCashDetails })));
 const PlatformSettings = lazy(() => import('./pages/admin/PlatformSettings').then((m) => ({ default: m.PlatformSettings })));
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotificationsPage'));
+const AppAvailability = lazy(() => import('./pages/admin/AppAvailability').then((m) => ({ default: m.AppAvailability })));
 
 // Lazy-loaded delivery pages
 const DeliveryDashboard = lazy(() => import('./pages/delivery/DeliveryDashboard').then((m) => ({ default: m.DeliveryDashboard })));
@@ -32,12 +33,13 @@ const Login = lazy(() => import('./pages/auth/Login').then((m) => ({ default: m.
 const PageLoader = () => <Loader label="Loading..." />;
 
 const adminLinks = [
-  { to: ROUTES.admin.dashboard,         label: 'Dashboard' },
-  { to: ROUTES.admin.shops,             label: 'Shops' },
-  { to: ROUTES.admin.users,             label: 'Users' },
-  { to: ROUTES.admin.orders,            label: 'Orders' },
-  { to: ROUTES.admin.deliveryPartners,  label: 'Delivery Partners' },
-  { to: ROUTES.admin.settings,          label: 'Platform Settings' }
+  { to: ROUTES.admin.dashboard,        label: 'Dashboard' },
+  { to: ROUTES.admin.shops,            label: 'Shops' },
+  { to: ROUTES.admin.users,            label: 'Users' },
+  { to: ROUTES.admin.orders,           label: 'Orders' },
+  { to: ROUTES.admin.deliveryPartners, label: 'Delivery Partners' },
+  { to: ROUTES.admin.settings,         label: 'Platform Settings' },
+  { to: ROUTES.admin.appAvailability,  label: 'App Availability' },
 ];
 
 const deliveryLinks = [
@@ -141,7 +143,8 @@ export const router = createBrowserRouter([
       { path: 'delivery-partners',      element: <Suspense fallback={<PageLoader />}><DeliveryPartners /></Suspense> },
       { path: 'delivery-partners/:id/cash', element: <Suspense fallback={<PageLoader />}><PartnerCashDetails /></Suspense> },
       { path: 'settings',               element: <Suspense fallback={<PageLoader />}><PlatformSettings /></Suspense> },
-      { path: 'notifications',          element: <Suspense fallback={<PageLoader />}><AdminNotifications /></Suspense> }
+      { path: 'notifications',          element: <Suspense fallback={<PageLoader />}><AdminNotifications /></Suspense> },
+      { path: 'app-availability',       element: <Suspense fallback={<PageLoader />}><AppAvailability /></Suspense> }
     ]
   },
 

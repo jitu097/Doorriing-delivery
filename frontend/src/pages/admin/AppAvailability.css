@@ -1,0 +1,474 @@
+/* ======================================================
+   AppAvailability.css
+   Premium Admin Panel — App Availability Control Page
+   ====================================================== */
+
+/* ── Page Shell ──────────────────────────────────────── */
+.avail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Status Banner (Live Status at top of page) ───────── */
+.avail-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+  border-radius: 16px;
+  border: 1.5px solid transparent;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+.avail-status-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.avail-status-banner--open {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #86efac;
+}
+
+.avail-status-banner--closed {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-color: #fdba74;
+}
+
+.avail-status-banner--off {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fca5a5;
+}
+
+.avail-status-pulse {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.avail-status-pulse--open  { background: #16a34a; }
+.avail-status-pulse--closed { background: #ea580c; }
+.avail-status-pulse--off   { background: #dc2626; }
+
+.avail-status-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0;
+  animation: avail-pulse 2s ease-in-out infinite;
+}
+
+.avail-status-pulse--open::after  { color: #16a34a; }
+.avail-status-pulse--closed::after { color: #ea580c; }
+.avail-status-pulse--off::after   { color: #dc2626; }
+
+@keyframes avail-pulse {
+  0%   { opacity: 0.6; transform: scale(1); }
+  70%  { opacity: 0;   transform: scale(1.6); }
+  100% { opacity: 0;   transform: scale(1.6); }
+}
+
+.avail-status-text {
+  flex: 1;
+}
+
+.avail-status-text__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 2px;
+}
+
+.avail-status-text__value {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.avail-status-text__reason {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+.avail-status-badge {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.avail-status-badge--open   { background: #dcfce7; color: #15803d; }
+.avail-status-badge--closed { background: #ffedd5; color: #c2410c; }
+.avail-status-badge--off    { background: #fee2e2; color: #b91c1c; }
+
+/* ── Main Layout ─────────────────────────────────────── */
+.avail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .avail-layout { grid-template-columns: 1fr; }
+}
+
+/* ── Card (shared) ───────────────────────────────────── */
+.avail-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.avail-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.avail-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.avail-card__icon--toggle { background: #eff6ff; }
+.avail-card__icon--clock  { background: #f5f3ff; }
+.avail-card__icon--msg    { background: #f0fdf4; }
+.avail-card__icon--preview { background: #fef9ee; }
+
+.avail-card__title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.avail-card__subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.avail-card__body {
+  padding: 28px;
+}
+
+/* ── Toggle Switch ───────────────────────────────────── */
+.avail-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.avail-toggle-info {
+  flex: 1;
+}
+
+.avail-toggle-info__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.avail-toggle-info__desc {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.avail-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.avail-toggle-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: right;
+  transition: color 0.3s ease;
+}
+
+.avail-toggle-label--on  { color: #16a34a; }
+.avail-toggle-label--off { color: #dc2626; }
+
+/* The actual toggle pill */
+.avail-toggle-switch {
+  position: relative;
+  width: 60px;
+  height: 32px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.avail-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.avail-toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  background: #e2e8f0;
+  transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
+}
+
+.avail-toggle-switch input:checked ~ .avail-toggle-track {
+  background: #16a34a;
+  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+  animation: avail-toggle-glow 0.5s ease forwards;
+}
+
+@keyframes avail-toggle-glow {
+  0%   { box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.25); }
+  100% { box-shadow: 0 0 0 0   rgba(22, 163, 74, 0); }
+}
+
+.avail-toggle-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.20);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.avail-toggle-switch input:checked ~ .avail-toggle-track .avail-toggle-thumb {
+  transform: translateX(28px);
+}
+
+/* ── Time Pickers ────────────────────────────────────── */
+.avail-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 500px) {
+  .avail-time-grid { grid-template-columns: 1fr; }
+}
+
+.avail-form-group { display: flex; flex-direction: column; gap: 6px; }
+
+.avail-form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.avail-form-input,
+.avail-form-textarea {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  color: var(--text);
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.avail-form-input:focus,
+.avail-form-textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.avail-form-hint {
+  font-size: 0.78125rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.avail-form-textarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+/* ── Section Divider ─────────────────────────────────── */
+.avail-section-gap { display: flex; flex-direction: column; gap: 20px; }
+
+/* ── Save Footer ─────────────────────────────────────── */
+.avail-save-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 28px;
+  border-top: 1px solid var(--border);
+  background: #fafafa;
+}
+
+.avail-save-footer__meta {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.avail-save-footer__meta strong { color: var(--text); }
+
+/* ── Preview Card ────────────────────────────────────── */
+.avail-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: sticky;
+  top: 24px;
+}
+
+.avail-preview-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.avail-preview-status--open   { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.avail-preview-status--closed { background: #fff7ed; border: 1px solid #fed7aa; }
+
+.avail-preview-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avail-preview-dot--open   { background: #22c55e; }
+.avail-preview-dot--closed { background: #f97316; }
+
+.avail-preview-status-text {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.avail-preview-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.avail-preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.avail-preview-row:last-child { border-bottom: none; }
+
+.avail-preview-row__label {
+  color: var(--text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.avail-preview-row__value {
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
+}
+
+.avail-preview-row__value--on    { color: #16a34a; }
+.avail-preview-row__value--off   { color: #dc2626; }
+.avail-preview-row__value--muted { color: var(--text-muted); font-weight: 400; font-style: italic; }
+
+/* ── Alerts ──────────────────────────────────────────── */
+.avail-alert {
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avail-alert--success {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+}
+
+.avail-alert--error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+}
+
+/* ── Transitions ─────────────────────────────────────── */
+.avail-fade-in {
+  animation: avail-fade-in 0.35s ease both;
+}
+
+@keyframes avail-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Loading skeleton ────────────────────────────────── */
+.avail-skeleton {
+  height: 20px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: avail-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes avail-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Mobile ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .avail-card__body    { padding: 20px 16px; }
+  .avail-card__header  { padding: 16px; }
+  .avail-save-footer   { padding: 16px; flex-direction: column; align-items: stretch; }
+  .avail-status-banner { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+}

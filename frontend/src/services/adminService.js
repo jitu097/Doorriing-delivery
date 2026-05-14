@@ -48,4 +48,8 @@ export const adminService = {
   markAsRead: (id) => apiClient.patch(`/admin/notifications/${id}/read`).then((r) => r.data.data),
   registerPushToken: (payload) => apiClient.post('/admin/notifications/tokens', payload).then((r) => r.data.data),
   removePushToken: (token) => apiClient.delete(`/admin/notifications/tokens/${token}`).then((r) => r.data.data),
+
+  // App Availability Control
+  getAppAvailability:    ()        => apiClient.get('/admin/app-availability').then((r) => r.data.data),
+  updateAppAvailability: (payload) => apiClient.put('/admin/app-availability', payload).then((r) => r.data.data),
 };

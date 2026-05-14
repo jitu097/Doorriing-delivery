@@ -3,6 +3,7 @@
 const { Router } = require('express');
 const adminController = require('../controllers/adminController');
 const orderController = require('../controllers/orderController');
+const appAvailabilityController = require('../controllers/appAvailabilityController');
 const { adminAuthMiddleware } = require('../middleware/adminAuthMiddleware');
 const { validateBody } = require('../middleware/validateRequest');
 
@@ -69,6 +70,14 @@ router.post('/assignments', validateBody('assignDelivery'), adminController.assi
 // Platform Settings
 router.get('/settings', adminController.getPlatformSettings);
 router.put('/settings', validateBody('updatePlatformSettings'), adminController.updatePlatformSettings);
+
+// App Availability Control
+router.get('/app-availability', appAvailabilityController.getAvailability);
+router.put(
+  '/app-availability',
+  validateBody('updateAppAvailability'),
+  appAvailabilityController.updateAvailability
+);
 
 // Notifications
 router.get('/notifications', adminController.getNotifications);

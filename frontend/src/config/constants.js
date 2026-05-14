@@ -5,15 +5,16 @@ export const API_URL =
 
 export const ROUTES = {
   admin: {
-    base: '/admin',
-    dashboard: '/admin/dashboard',
-    shops: '/admin/shops',
-    shopDetails: (id) => `/admin/shops/${id}`,
-    users: '/admin/users',
-    orders: '/admin/orders',
+    base:             '/admin',
+    dashboard:        '/admin/dashboard',
+    shops:            '/admin/shops',
+    shopDetails:      (id) => `/admin/shops/${id}`,
+    users:            '/admin/users',
+    orders:           '/admin/orders',
     deliveryPartners: '/admin/delivery-partners',
-    partnerCash: (id) => `/admin/delivery-partners/${id}/cash`,
-    settings: '/admin/settings'
+    partnerCash:      (id) => `/admin/delivery-partners/${id}/cash`,
+    settings:         '/admin/settings',
+    appAvailability:  '/admin/app-availability',
   },
   delivery: {
     base: '/delivery',
