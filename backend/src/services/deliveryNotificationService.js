@@ -82,17 +82,17 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
         token: fcmToken,
         notification: {
           title: "New Delivery Assigned",
-          body: "You have a new order delivery request"
+          body: "You have a new order"
         },
         android: {
           priority: "high",
           notification: {
-            sound: "default",
-            channelId: "delivery_notifications"
+            channelId: "delivery_notifications",
+            sound: "default"
           }
         },
         data: {
-          type: "new_delivery",
+          type: "NEW_ASSIGNMENT",
           order_id: String(orderId)
         }
       };
