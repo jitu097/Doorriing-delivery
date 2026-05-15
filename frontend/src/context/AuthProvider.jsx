@@ -42,17 +42,32 @@ function isTokenValid(token) {
  * Notify Android bridge after login (best-effort, never throws).
  * 1. saveAuthToken — persists JWT in SharedPreferences
  * 2. syncToken     — immediately sends any cached FCM token to the backend
+ *
+ * NOTE: Login.jsx also calls sendJwtToAndroidBridge() directly with retry logic.
+ * This function is kept here for the restoreSession (auto-login) path.
  */
 function notifyAndroidLogin(token) {
   try {
-    if (window.AndroidBridge && typeof window.AndroidBridge.saveAuthToken === 'function') {
-      window.AndroidBridge.saveAuthToken(token);
-      console.log('[LOGIN_PERSIST] AndroidBridge.saveAuthToken called ✓');
+    console.log('[LOGIN_PERSIST] notifyAndroidLogin() called');
+    console.log('[LOGIN_PERSIST] window.AndroidBridge:', typeof window.AndroidBridge);
+
+    if (!window.AndroidBridge) {
+      console.warn('[LOGIN_PERSIST] window.AndroidBridge is NOT defined — running in browser or bridge not registered');
+      return;
     }
-    // syncToken is a no-op if no FCM token is cached yet; harmless to call always
-    if (window.AndroidBridge && typeof window.AndroidBridge.syncToken === 'function') {
+
+    if (typeof window.AndroidBridge.saveAuthToken !== 'function') {
+      console.error('[LOGIN_PERSIST] ❌ AndroidBridge.saveAuthToken is not a function — check @JavascriptInterface registration');
+      return;
+    }
+
+    console.log('[LOGIN_PERSIST] ✓ Calling AndroidBridge.saveAuthToken...');
+    window.AndroidBridge.saveAuthToken(token);
+    console.log('[LOGIN_PERSIST] ✓ AndroidBridge.saveAuthToken called');
+
+    if (typeof window.AndroidBridge.syncToken === 'function') {
       window.AndroidBridge.syncToken();
-      console.log('[LOGIN_PERSIST] AndroidBridge.syncToken called ✓');
+      console.log('[LOGIN_PERSIST] ✓ AndroidBridge.syncToken called');
     }
   } catch (e) {
     console.warn('[LOGIN_PERSIST] AndroidBridge error (non-fatal):', e);

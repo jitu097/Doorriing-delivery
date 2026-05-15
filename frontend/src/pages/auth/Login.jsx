@@ -5,13 +5,68 @@ import { ROUTES } from '../../config/constants';
 import { Button } from '../../components/common/Button';
 import './Login.css';
 
+// ─── Android Bridge JWT handoff ───────────────────────────────────────────────
+// Called ONLY after successful delivery login.
+// Sends the JWT directly to native Android so it can link the FCM token.
+//
+// Uses a retry loop because on some devices window.AndroidBridge may not be
+// registered by the JS engine in the first microtask after page load, but IS
+// available within the first 500 ms of the WebView lifetime.
+function sendJwtToAndroidBridge(token) {
+  console.log('[LOGIN_PERSIST] ══════════════════════════════════');
+  console.log('[LOGIN_PERSIST] sendJwtToAndroidBridge() called');
+  console.log('[LOGIN_PERSIST] token length:', token ? token.length : 'NULL/EMPTY');
+
+  if (!token) {
+    console.error('[LOGIN_PERSIST] ❌ token is null/empty — skipping bridge call');
+    return;
+  }
+
+  // Attempt immediately
+  const attempt = (triesLeft) => {
+    console.log(`[LOGIN_PERSIST] Bridge attempt (tries left: ${triesLeft})`);
+    console.log('[LOGIN_PERSIST] typeof window.AndroidBridge:', typeof window.AndroidBridge);
+    console.log('[LOGIN_PERSIST] window.AndroidBridge value:', window.AndroidBridge);
+
+    if (window.AndroidBridge && typeof window.AndroidBridge.saveAuthToken === 'function') {
+      console.log('[LOGIN_PERSIST] ✓ AndroidBridge.saveAuthToken IS available — calling now');
+      window.AndroidBridge.saveAuthToken(token);
+      console.log('[LOGIN_PERSIST] ✓ saveAuthToken call dispatched');
+
+      // Also trigger syncToken so Android immediately re-sends any cached FCM token
+      if (typeof window.AndroidBridge.syncToken === 'function') {
+        console.log('[LOGIN_PERSIST] ✓ Calling AndroidBridge.syncToken()');
+        window.AndroidBridge.syncToken();
+        console.log('[LOGIN_PERSIST] ✓ syncToken call dispatched');
+      } else {
+        console.warn('[LOGIN_PERSIST] ⚠ AndroidBridge.syncToken not available (non-fatal)');
+      }
+      console.log('[LOGIN_PERSIST] ══════════════════════════════════');
+      return; // success
+    }
+
+    // Bridge not ready yet
+    console.warn('[LOGIN_PERSIST] ⚠ AndroidBridge not available on this attempt');
+    if (triesLeft > 0) {
+      console.log(`[LOGIN_PERSIST] Retrying in 300ms...`);
+      setTimeout(() => attempt(triesLeft - 1), 300);
+    } else {
+      console.error('[LOGIN_PERSIST] ❌ AndroidBridge.saveAuthToken NOT found after all retries');
+      console.error('[LOGIN_PERSIST] Running in browser (no Android) OR addJavascriptInterface not called');
+      console.log('[LOGIN_PERSIST] ══════════════════════════════════');
+    }
+  };
+
+  attempt(3); // try up to 4 times (immediate + 3 retries × 300 ms = up to 900 ms total)
+}
+
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [genericError, setGenericError] = useState('');
-  
+
   const { login, isLoading, error: authError, clearError: clearAuthError } = useAuth();
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -19,21 +74,39 @@ export const Login = () => {
     clearAuthError();
     setGenericError('');
 
-    // First try admin login
+    console.log('[LOGIN_PERSIST] ── handleSubmit: trying admin login first');
+
+    // Step 1: Try admin login
     const adminRes = await login({ email, password, type: 'admin' });
     if (adminRes.success) {
+      console.log('[LOGIN_PERSIST] Admin login success — navigating to admin dashboard');
       navigate(ROUTES.admin.dashboard);
       return;
     }
-    
-    // Admin failed, try delivery login
+
+    console.log('[LOGIN_PERSIST] ── Admin login failed — trying delivery login');
+
+    // Step 2: Try delivery login
     const deliveryRes = await login({ email, password, type: 'delivery' });
     if (deliveryRes.success) {
+      console.log('[LOGIN_PERSIST] ✓ Delivery login SUCCESS');
+
+      // ── CRITICAL: Pass JWT to native Android bridge ──────────────────
+      // AuthProvider.login() already stored the token in localStorage AND
+      // called notifyAndroidLogin(). We call sendJwtToAndroidBridge() here
+      // ADDITIONALLY as a direct call with full diagnostic logging so we
+      // can confirm the bridge is reachable from this exact execution point.
+      const storedToken = localStorage.getItem('bz_delivery_token');
+      console.log('[LOGIN_PERSIST] JWT from localStorage:', storedToken ? `present (${storedToken.length} chars)` : 'MISSING');
+      sendJwtToAndroidBridge(storedToken);
+      // ─────────────────────────────────────────────────────────────────
+
       navigate(ROUTES.delivery.dashboard);
       return;
     }
 
     // Both failed
+    console.warn('[LOGIN_PERSIST] Both admin and delivery login failed');
     setGenericError('Invalid credentials or account not found.');
   };
 
