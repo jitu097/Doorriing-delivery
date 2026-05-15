@@ -13,7 +13,6 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.FirebaseMessaging
@@ -29,38 +28,29 @@ import java.io.IOException
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        // ─── Log tags ───────────────────────────────────────────────────────
         private const val TAG     = "MainActivity"
-        private const val FCM_TAG = "FCM_DEBUG"   // filter: adb logcat -s FCM_DEBUG
+        private const val FCM_TAG = "FCM_DEBUG"
 
-        // ─── URLs ───────────────────────────────────────────────────────────
         private const val ROOT_URL = "https://delivery.doorriing.com/"
         private const val API_URL  = "https://doorriing-delivery-3.onrender.com/"
 
-        // ─── SharedPreferences keys ─────────────────────────────────────────
         private const val PREFS_NAME           = "doorriing_prefs"
         private const val KEY_AUTH_TOKEN       = "auth_token"
-        private const val KEY_FCM_TOKEN        = "fcm_token"   // cached FCM token
+        private const val KEY_FCM_TOKEN        = "fcm_token"
         private const val KEY_PENDING_ORDER_ID = "pending_order_id"
         private const val KEY_PENDING_TYPE     = "pending_type"
+
+        private const val PERM_REQUEST_CODE    = 1001
     }
 
     private lateinit var webView: WebView
     private val httpClient = OkHttpClient()
 
-    // =========================================================================
-    // Android 13+ notification permission launcher
-    // Registered BEFORE onCreate — required by ActivityResultContracts API
-    // =========================================================================
-    private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                Log.i(FCM_TAG, "NOTIFICATION_PERMISSION: Permission granted ✓")
-            } else {
-                Log.w(FCM_TAG, "NOTIFICATION_PERMISSION: Permission denied — " +
-                        "push notifications will not appear on lock screen/home screen")
-            }
-        }
+    // Guard: prevents duplicate permission dialogs when Activity restarts
+    // (rotation, system kill/recreate) while first dialog is still open.
+    // "Can request only one set of permissions at a time" error is caused by
+    // calling requestPermissions() a second time before the first resolves.
+    private var permissionRequested = false
 
     // =========================================================================
     // onCreate
@@ -73,10 +63,10 @@ class MainActivity : AppCompatActivity() {
         Log.d(FCM_TAG, "MainActivity.onCreate() — app starting")
         Log.d(FCM_TAG, "Android SDK version: ${Build.VERSION.SDK_INT}")
 
-        // ── Step 1: notification permission (Android 13+) ─────────────────
+        // ── Step 1: notification permission (once, Android 13+ only) ─────
         requestNotificationPermissionIfNeeded()
 
-        // ── Step 2: WebView setup ──────────────────────────────────────────
+        // ── Step 2: WebView ───────────────────────────────────────────────
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
@@ -84,16 +74,14 @@ class MainActivity : AppCompatActivity() {
             settings.allowUniversalAccessFromFileURLs = false
 
             webViewClient = object : WebViewClient() {
+
                 override fun shouldOverrideUrlLoading(
                     view: WebView?,
                     request: WebResourceRequest?
                 ): Boolean {
                     val url = request?.url?.toString() ?: return false
-
                     return when {
-                        // ── intent:// — payment apps (Razorpay, PhonePe, GPay, Paytm)
                         url.startsWith("intent://") -> {
-                            Log.d(TAG, "Intercepting intent:// → $url")
                             try {
                                 val intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
                                 if (packageManager.resolveActivity(intent, 0) != null) {
@@ -102,50 +90,94 @@ class MainActivity : AppCompatActivity() {
                                     val fallback = intent.getStringExtra("browser_fallback_url")
                                     if (!fallback.isNullOrBlank()) view?.loadUrl(fallback)
                                 }
-                            } catch (e: Exception) {
-                                Log.e(TAG, "intent:// parse error: ${e.message}")
-                            }
+                            } catch (e: Exception) { Log.e(TAG, "intent:// error: ${e.message}") }
                             true
                         }
-
-                        // ── tel: — phone dialer
                         url.startsWith("tel:") -> {
-                            Log.d(TAG, "Intercepting tel: → $url")
                             try { startActivity(Intent(Intent.ACTION_DIAL, Uri.parse(url))) }
-                            catch (e: Exception) { Log.e(TAG, "Dialer error: ${e.message}") }
+                            catch (e: Exception) { Log.e(TAG, "tel: error: ${e.message}") }
                             true
                         }
-
-                        // ── mailto:
                         url.startsWith("mailto:") -> {
-                            Log.d(TAG, "Intercepting mailto: → $url")
                             try { startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse(url))) }
-                            catch (e: Exception) { Log.e(TAG, "Mail error: ${e.message}") }
+                            catch (e: Exception) { Log.e(TAG, "mailto: error: ${e.message}") }
                             true
                         }
-
-                        // ── everything else stays in WebView
                         else -> false
                     }
                 }
-            }
+
+                // =============================================================
+                // onPageFinished — inject persistent JWT polling script
+                //
+                // WHY POLLING INSTEAD OF DIRECT EXTRACTION:
+                //   This is a React Single-Page App. onPageFinished fires ONCE
+                //   when index.html loads (URL = root). After that, React Router
+                //   handles all navigation client-side via history.pushState —
+                //   onPageFinished is NEVER called again. So reading localStorage
+                //   at page load always finds nothing (user hasn't logged in yet).
+                //
+                // THE FIX — inject a self-contained JS polling interval:
+                //   The script runs inside the WebView's own JavaScript context,
+                //   checks localStorage every second, and the instant the user
+                //   logs in and AuthProvider writes 'bz_delivery_token', the
+                //   script calls window.AndroidBridge.saveAuthToken(token).
+                //   This works with ANY frontend version — no redeployment needed.
+                // =============================================================
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    Log.i(FCM_TAG, "onPageFinished: url=$url — injecting JWT poll script")
+
+                    // Inject once. The guard flag window.__jwtPollActive prevents
+                    // duplicate intervals if onPageFinished fires more than once.
+                    view?.evaluateJavascript("""
+                        (function() {
+                            if (window.__jwtPollActive) { return; }
+                            window.__jwtPollActive = true;
+                            console.log('[JWT_POLL] Polling started for bz_delivery_token');
+
+                            var STORAGE_KEY = 'bz_delivery_token';
+                            var lastSent    = null;
+
+                            var poll = setInterval(function() {
+                                var token = localStorage.getItem(STORAGE_KEY);
+                                if (!token || token === lastSent) { return; }
+
+                                if (window.AndroidBridge &&
+                                        typeof window.AndroidBridge.saveAuthToken === 'function') {
+                                    console.log('[JWT_POLL] Token found (len=' + token.length + ') — calling saveAuthToken');
+                                    window.AndroidBridge.saveAuthToken(token);
+                                    lastSent = token;
+                                    console.log('[JWT_POLL] saveAuthToken dispatched ✓');
+                                } else {
+                                    console.warn('[JWT_POLL] AndroidBridge not ready yet — will retry');
+                                }
+                            }, 1000);
+
+                            console.log('[JWT_POLL] Poll interval registered (every 1 s)');
+                        })();
+                    """.trimIndent(), null)
+                }
+            }   // end webViewClient
 
             addJavascriptInterface(AndroidBridge(), "AndroidBridge")
+            Log.i(FCM_TAG, "─────────────────────────────────────────")
+            Log.i(FCM_TAG, "AndroidBridge REGISTERED ✓ — window.AndroidBridge is available to JavaScript")
+            Log.i(FCM_TAG, "Methods: saveAuthToken, syncToken, checkPendingNavigation, onLogout, postMessage")
+            Log.i(FCM_TAG, "─────────────────────────────────────────")
         }
 
         setContentView(webView)
 
-        // ── Step 3: load URL / handle notification deep link ──────────────
+        // ── Step 3: handle notification deep link / load root URL ────────
         handleIntent(intent)
 
-        // ── Step 4: fetch and sync FCM token ──────────────────────────────
-        //    Token is fetched from Firebase SDK and cached locally.
-        //    It will be sent to the backend as soon as a JWT is available.
+        // ── Step 4: fetch & cache FCM token ──────────────────────────────
         fetchFcmToken()
     }
 
     // =========================================================================
-    // onNewIntent — notification tapped while app is ALREADY OPEN
+    // onNewIntent — notification tapped while app is already open
     // =========================================================================
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -155,12 +187,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================================
+    // onRequestPermissionsResult — permission dialog result callback
+    // =========================================================================
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERM_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(FCM_TAG, "NOTIFICATION_PERMISSION: Granted ✓")
+            } else {
+                Log.w(FCM_TAG, "NOTIFICATION_PERMISSION: Denied")
+            }
+        }
+    }
+
+    // =========================================================================
     // Deep link handling
-    //
-    // Never load a sub-path directly — React SPA uses client-side routing.
-    // Instead: load ROOT_URL, store the target route, web app calls
-    // AndroidBridge.checkPendingNavigation() after React Router mounts,
-    // which triggers window.history.pushState().
     // =========================================================================
     private fun handleIntent(intent: Intent?) {
         val type    = intent?.getStringExtra("type")
@@ -168,13 +213,11 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "handleIntent → type=$type orderId=$orderId")
 
         if (!type.isNullOrBlank() && !orderId.isNullOrBlank()) {
-            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit()
+            getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
                 .putString(KEY_PENDING_ORDER_ID, orderId)
                 .putString(KEY_PENDING_TYPE, type)
                 .apply()
         }
-        // Always load base URL — React Router handles the rest
         webView.loadUrl(ROOT_URL)
     }
 
@@ -209,52 +252,33 @@ class MainActivity : AppCompatActivity() {
 
     // =========================================================================
     // FCM Token — Fetch → Cache → Send to backend
-    //
-    // WHY we cache:
-    //   Firebase SDK returns the token here.
-    //   Backend requires a JWT to save it.
-    //   On first launch the user isn't logged in yet, so JWT is missing.
-    //   We cache the raw FCM token in SharedPreferences so that the MOMENT
-    //   the JWT arrives (via AndroidBridge.saveAuthToken), we can send
-    //   the cached token immediately without another Firebase SDK call.
     // =========================================================================
     private fun fetchFcmToken() {
         Log.d(FCM_TAG, "fetchFcmToken: Requesting token from Firebase SDK...")
-
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
-                    Log.e(FCM_TAG, "TOKEN FETCH FAILED — exception: ${task.exception}")
-                    Log.e(FCM_TAG, "TOKEN FETCH FAILED — message: ${task.exception?.message}")
-                    Log.e(FCM_TAG, "TOKEN FETCH FAILED — cause: ${task.exception?.cause}")
+                    Log.e(FCM_TAG, "TOKEN FETCH FAILED — ${task.exception?.message}")
                     return@addOnCompleteListener
                 }
-
                 val token = task.result
                 if (token.isNullOrBlank()) {
-                    Log.e(FCM_TAG, "TOKEN IS NULL OR BLANK — Firebase returned empty token")
+                    Log.e(FCM_TAG, "TOKEN IS NULL OR BLANK")
                     return@addOnCompleteListener
                 }
-
                 Log.i(FCM_TAG, "TOKEN GENERATED SUCCESSFULLY ✓")
                 Log.i(FCM_TAG, "TOKEN = $token")
 
-                // Cache the token — we'll need it when JWT becomes available
                 val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 prefs.edit().putString(KEY_FCM_TOKEN, token).apply()
                 Log.d(FCM_TAG, "TOKEN cached in SharedPreferences ✓")
 
-                // Attempt to send to backend (only succeeds if JWT is stored)
                 sendTokenToBackend(token)
             }
     }
 
     // =========================================================================
     // Send FCM token to backend API
-    //
-    // Requires: JWT in SharedPreferences (stored by AndroidBridge.saveAuthToken)
-    // If no JWT → logs warning and returns. Token send will be retried by
-    // AndroidBridge.saveAuthToken() → fetchFcmToken() when user logs in.
     // =========================================================================
     private fun sendTokenToBackend(fcmToken: String) {
         val prefs     = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -264,15 +288,14 @@ class MainActivity : AppCompatActivity() {
 
         if (authToken.isNullOrBlank()) {
             Log.w(FCM_TAG, "sendTokenToBackend: JWT is NULL/EMPTY — skipping backend save")
-            Log.w(FCM_TAG, "sendTokenToBackend: FCM token is CACHED and will be sent after login")
+            Log.w(FCM_TAG, "sendTokenToBackend: FCM token CACHED — will send after login")
             Log.w(FCM_TAG, "sendTokenToBackend: ACTION REQUIRED — web app must call:")
             Log.w(FCM_TAG, "  window.AndroidBridge.saveAuthToken(yourJwtToken)")
             return
         }
 
         Log.d(FCM_TAG, "sendTokenToBackend: JWT present ✓ (length=${authToken.length})")
-        Log.d(FCM_TAG, "sendTokenToBackend: FCM token length=${fcmToken.length}")
-        Log.d(FCM_TAG, "sendTokenToBackend: Sending to → ${API_URL}api/delivery/push-token")
+        Log.d(FCM_TAG, "sendTokenToBackend: Sending → ${API_URL}api/delivery/push-token")
 
         val json = """{"token":"$fcmToken","device_id":"android","platform":"android"}"""
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
@@ -286,28 +309,23 @@ class MainActivity : AppCompatActivity() {
 
         httpClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(FCM_TAG, "sendTokenToBackend: NETWORK FAILURE — ${e.javaClass.simpleName}: ${e.message}")
+                Log.e(FCM_TAG, "sendTokenToBackend: NETWORK FAILURE — ${e.message}")
             }
-
             override fun onResponse(call: Call, response: Response) {
                 response.use { resp ->
-                    val responseBody = resp.body?.string() ?: "(empty)"
+                    val body = resp.body?.string() ?: "(empty)"
                     if (resp.isSuccessful) {
                         Log.i(FCM_TAG, "sendTokenToBackend: SUCCESS ✓ HTTP ${resp.code}")
-                        Log.i(FCM_TAG, "sendTokenToBackend: Response → $responseBody")
-                        Log.i(FCM_TAG, "FCM token is NOW SAVED in delivery_notification_tokens ✓")
+                        Log.i(FCM_TAG, "sendTokenToBackend: Response → $body")
+                        Log.i(FCM_TAG, "FCM token NOW SAVED in delivery_notification_tokens ✓")
                     } else {
-                        Log.e(FCM_TAG, "sendTokenToBackend: FAILED — HTTP ${resp.code}")
-                        Log.e(FCM_TAG, "sendTokenToBackend: Response body → $responseBody")
-                        
-                        val code = resp.code
-                        val errorDetail = when (code) {
-                            401 -> "401 UNAUTHORIZED: JWT is invalid or expired. User must re-login."
-                            422 -> "422 VALIDATION: Token payload is malformed."
-                            500 -> "500 SERVER ERROR: Backend DB issue."
-                            else -> "Unexpected Error: $code"
-                        }
-                        Log.e(FCM_TAG, "  → $errorDetail")
+                        Log.e(FCM_TAG, "sendTokenToBackend: FAILED — HTTP ${resp.code} → $body")
+                        Log.e(FCM_TAG, "  → ${when(resp.code){
+                            401  -> "401 UNAUTHORIZED: JWT invalid/expired"
+                            422  -> "422 VALIDATION: Token payload malformed"
+                            500  -> "500 SERVER ERROR: Backend DB issue"
+                            else -> "Unexpected error ${resp.code}"
+                        }}")
                     }
                 }
             }
@@ -315,98 +333,73 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================================
-    // Android 13+ runtime notification permission
+    // Android 13+ runtime notification permission — requested ONCE only
+    // Uses simple requestPermissions() with result in onRequestPermissionsResult
     // =========================================================================
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val state = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-            if (state != PackageManager.PERMISSION_GRANTED) {
-                Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Requesting permission (Android 13+ / API ${Build.VERSION.SDK_INT})")
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED) {
                 Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Already granted ✓")
+                return
             }
+            if (permissionRequested) {
+                Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Already requested — skipping duplicate")
+                return
+            }
+            permissionRequested = true
+            Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Requesting (Android 13+ / API ${Build.VERSION.SDK_INT})")
+            requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                PERM_REQUEST_CODE
+            )
         } else {
-            Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Not required on Android < 13 (API ${Build.VERSION.SDK_INT}) — auto-granted ✓")
+            Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Not required on Android < 13 — auto-granted ✓")
         }
     }
 
     // =========================================================================
-    // JavaScript Bridge
-    // Web app communicates with native Android via window.AndroidBridge.*
+    // JavaScript Bridge — window.AndroidBridge.*
     // =========================================================================
     inner class AndroidBridge {
 
-        /**
-         * ▶ MUST be called by React app immediately after successful login.
-         *
-         * This is the KEY integration point. Without this call, the FCM token
-         * cannot be sent to the backend (JWT is required by the push-token API).
-         *
-         * Add this to your React login success handler:
-         *   if (window.AndroidBridge?.saveAuthToken) {
-         *     window.AndroidBridge.saveAuthToken(jwtToken)
-         *   }
-         */
         @JavascriptInterface
         fun saveAuthToken(token: String) {
             if (token.isBlank()) {
                 Log.e(FCM_TAG, "AndroidBridge.saveAuthToken: RECEIVED BLANK JWT — ignoring")
                 return
             }
-
-            Log.i(FCM_TAG, "AndroidBridge.saveAuthToken: JWT received ✓ (length=${token.length})")
+            Log.i(FCM_TAG, "AndroidBridge.saveAuthToken: JWT received from WebView ✓ (length=${token.length})")
 
             val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putString(KEY_AUTH_TOKEN, token).apply()
-
             Log.i(FCM_TAG, "AndroidBridge.saveAuthToken: JWT saved to SharedPreferences ✓")
 
-            // Check if we already have a cached FCM token — send it now
             val cachedFcmToken = prefs.getString(KEY_FCM_TOKEN, null)
             if (!cachedFcmToken.isNullOrBlank()) {
-                Log.i(FCM_TAG, "AndroidBridge.saveAuthToken: Found cached FCM token — sending to backend NOW")
+                Log.i(FCM_TAG, "AndroidBridge.saveAuthToken: Cached FCM token found — sending to backend NOW")
                 sendTokenToBackend(cachedFcmToken)
             } else {
-                Log.d(FCM_TAG, "AndroidBridge.saveAuthToken: No cached FCM token yet — fetching from Firebase")
+                Log.d(FCM_TAG, "AndroidBridge.saveAuthToken: No cached FCM token — fetching from Firebase")
                 fetchFcmToken()
             }
         }
 
-        /**
-         * ▶ Call this after React Router is mounted.
-         * Triggers navigation to pending deep-link order (from notification tap).
-         *
-         *   useEffect(() => {
-         *     window.AndroidBridge?.checkPendingNavigation?.()
-         *   }, [])
-         */
         @JavascriptInterface
         fun checkPendingNavigation() {
             Log.d(TAG, "AndroidBridge.checkPendingNavigation called")
             navigateToPendingDeepLink()
         }
 
-        /**
-         * ▶ Manual FCM token re-sync trigger.
-         * Call after login if saveAuthToken was called before the token was ready.
-         *
-         *   window.AndroidBridge?.syncToken?.()
-         */
         @JavascriptInterface
         fun syncToken() {
-            Log.d(FCM_TAG, "AndroidBridge.syncToken: Manual sync triggered from web")
+            Log.d(FCM_TAG, "AndroidBridge.syncToken: Manual sync triggered")
             fetchFcmToken()
         }
 
-        /**
-         * ▶ Call on logout to clear stored credentials.
-         *
-         *   window.AndroidBridge?.onLogout?.()
-         */
         @JavascriptInterface
         fun onLogout() {
-            Log.d(TAG, "AndroidBridge.onLogout: Clearing stored JWT and FCM cache")
+            Log.d(TAG, "AndroidBridge.onLogout: Clearing JWT and FCM cache")
             getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
                 .remove(KEY_AUTH_TOKEN)
                 .remove(KEY_FCM_TOKEN)
@@ -416,9 +409,6 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "AndroidBridge.onLogout: SharedPreferences cleared ✓")
         }
 
-        /**
-         * ▶ General-purpose message channel from web app.
-         */
         @JavascriptInterface
         fun postMessage(message: String) {
             Log.d(TAG, "AndroidBridge.postMessage: $message")
