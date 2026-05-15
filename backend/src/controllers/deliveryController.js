@@ -179,7 +179,7 @@ const saveDeliveryToken = async (req, res, next) => {
           role:                'delivery',
           last_used_at:        new Date().toISOString()
         },
-        { onConflict: 'fcm_token' }
+        { onConflict: 'device_id' }
       )
       .select()
       .single();
