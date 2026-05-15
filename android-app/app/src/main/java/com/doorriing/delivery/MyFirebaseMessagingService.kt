@@ -25,7 +25,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         private const val TAG     = "FCM_Service"
         private const val FCM_TAG = "FCM_DEBUG"          // same tag as MainActivity for unified logcat
 
-        private const val CHANNEL_ID   = "delivery_notifications"
+        private const val CHANNEL_ID   = "doorriing_delivery_channel"
         private const val CHANNEL_NAME = "Delivery Alerts"
         private const val CHANNEL_DESC = "High-priority notifications for new delivery assignments"
 

@@ -78,17 +78,19 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
     // 4. Build and send FCM message for each token
     // -----------------------------------------------------------------------
     for (const fcmToken of tokens) {
+      const shortOrderId = String(orderId).split('-')[0].toUpperCase();
       const message = {
         token: fcmToken,
         notification: {
           title: "New Delivery Assigned",
-          body: "You have a new order"
+          body: `Order #${shortOrderId} assigned to you`
         },
         android: {
           priority: "high",
           notification: {
-            channelId: "delivery_notifications",
-            sound: "default"
+            channelId: "doorriing_delivery_channel",
+            sound: "default",
+            priority: "max"
           }
         },
         data: {
