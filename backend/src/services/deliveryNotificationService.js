@@ -1,8 +1,7 @@
 'use strict';
 
-const admin = require('firebase-admin');
 const { getSupabaseClient } = require('../config/db');
-const { initFirebase } = require('../config/firebase');
+const { initFirebase, getMessaging } = require('../config/firebase');
 const { logger } = require('../utils/logger');
 
 /**
@@ -10,27 +9,37 @@ const { logger } = require('../utils/logger');
  *
  * @param {string} deliveryPartnerId  - UUID of the delivery partner
  * @param {string} orderId            - UUID of the order
- * @param {string} title              - Notification title
- * @param {string} body               - Notification body text
+ * @param {string} title              - Notification title  (optional override)
+ * @param {string} body               - Notification body   (optional override)
  */
 const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => {
+  logger.info(`[FCM] ======================================================`);
+  logger.info(`[FCM] sendPushNotification() called`);
+  logger.info(`[FCM]   deliveryPartnerId : ${deliveryPartnerId}`);
+  logger.info(`[FCM]   orderId           : ${orderId}`);
+
   try {
-    // Ensure Firebase Admin SDK is initialised (safe to call multiple times)
+    // -------------------------------------------------------------------------
+    // 0. Ensure Firebase Admin SDK is initialised
+    // -------------------------------------------------------------------------
     initFirebase();
+
     const supabase = getSupabaseClient();
 
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // 1. Fetch all FCM tokens registered for this delivery partner
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    logger.info(`[FCM] Fetching FCM tokens for partner ${deliveryPartnerId}...`);
+
     const { data: tokensData, error: tokenError } = await supabase
       .from('delivery_notification_tokens')
-      .select('fcm_token')
+      .select('fcm_token, device_id, platform')
       .eq('delivery_partner_id', deliveryPartnerId)
       .eq('role', 'delivery');
 
     if (tokenError) {
-      logger.error(`[FCM] Error fetching tokens for partner ${deliveryPartnerId}:`, tokenError);
-      return;
+      logger.error(`[FCM] ❌ DB error fetching tokens:`, tokenError);
+      // Still save DB notification for in-app fallback
     }
 
     const tokens = (tokensData || []).map(t => t.fcm_token).filter(Boolean);
@@ -38,22 +47,29 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
 
     if (tokens.length === 0) {
       logger.warn(
-        `[FCM] ⚠️  No FCM tokens for partner ${deliveryPartnerId}. ` +
-        `Order #${orderId} push notification SKIPPED. ` +
-        `Ensure the delivery partner has logged in on the Android app at least once.`
+        `[FCM] ⚠️  No FCM tokens found for partner ${deliveryPartnerId}. ` +
+        `Delivery partner must open the Android app at least once to register a token.`
       );
-      // Still fall through to save DB notification so in-app polling works as fallback
+    } else {
+      tokensData.forEach((t, i) => {
+        logger.info(`[FCM]   Token[${i}] device=${t.device_id} platform=${t.platform} token=${t.fcm_token?.substring(0, 20)}...`);
+      });
     }
 
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // 2. Persist notification to DB — in-app polling reads from here
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    const shortId = String(orderId).split('-')[0].toUpperCase();
+    const notifTitle = title || 'New Delivery Assigned';
+    const notifBody  = body  || `Order #${shortId} assigned to you`;
+
+    logger.info(`[FCM] Saving notification to delivery_notifications table...`);
     const { error: insertError } = await supabase
       .from('delivery_notifications')
       .insert({
         delivery_partner_id: deliveryPartnerId,
-        title,
-        body,
+        title: notifTitle,
+        body:  notifBody,
         data: {
           order_id: String(orderId),
           type: 'NEW_ASSIGNMENT'
@@ -61,64 +77,85 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
       });
 
     if (insertError) {
-      logger.error(`[FCM] Error saving notification to DB:`, insertError);
-      // Continue sending push even if DB insert fails
+      logger.error(`[FCM] ❌ Failed to save in-app notification:`, insertError);
     } else {
-      logger.info(`[FCM] DB notification saved for partner ${deliveryPartnerId}`);
+      logger.info(`[FCM] ✅ In-app notification saved to DB`);
     }
 
-    // -----------------------------------------------------------------------
-    // 3. Skip FCM send if no tokens registered
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // 3. Skip FCM send if no tokens
+    // -------------------------------------------------------------------------
     if (tokens.length === 0) {
+      logger.warn(`[FCM] Skipping FCM push — no tokens registered`);
       return;
     }
 
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // 4. Build and send FCM message for each token
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    let successCount = 0;
+    let failureCount = 0;
+
     for (const fcmToken of tokens) {
-      const shortOrderId = String(orderId).split('-')[0].toUpperCase();
       const message = {
         token: fcmToken,
         notification: {
-          title: "New Delivery Assigned",
-          body: `Order #${shortOrderId} assigned to you`
+          title: notifTitle,
+          body:  notifBody
         },
         android: {
-          priority: "high",
+          priority: 'high',
           notification: {
-            channelId: "doorriing_delivery_channel",
-            sound: "default",
-            priority: "max"
+            channelId:             'doorriing_delivery_channel',
+            sound:                 'default',
+            priority:              'max',
+            defaultSound:          true,
+            defaultVibrateTimings: true,
+            clickAction:           'OPEN_DELIVERY_APP'
           }
         },
         data: {
-          type: "NEW_ASSIGNMENT",
-          order_id: String(orderId)
+          type:         'NEW_ASSIGNMENT',
+          order_id:     String(orderId),
+          click_action: 'OPEN_DELIVERY_APP'
         }
       };
 
+      logger.info(`[FCM] ➤ Sending push to token: ${fcmToken.substring(0, 20)}...`);
+
       try {
-        logger.info(`[FCM] Sending push to token: ${fcmToken.substring(0, 15)}...`);
-        const response = await admin.messaging().send(message);
-        logger.info(`[FCM] Successfully sent message: ${response}`);
+        // Use getMessaging() so we use the same initialised Firebase app instance
+        const messaging = getMessaging();
+        const response = await messaging.send(message);
+        logger.info(`[FCM] ✅ Push sent successfully! Message ID: ${response}`);
+        successCount++;
       } catch (sendError) {
-        logger.error(`[FCM] Error sending message to token ${fcmToken.substring(0, 15)}...:`, sendError);
-        
-        // Cleanup stale token if unregistered
+        failureCount++;
+        logger.error(`[FCM] ❌ Failed to send push to token ${fcmToken.substring(0, 20)}...`);
+        logger.error(`[FCM]   Error code    : ${sendError.code}`);
+        logger.error(`[FCM]   Error message : ${sendError.message}`);
+
+        // Remove stale tokens automatically
         if (
           sendError.code === 'messaging/registration-token-not-registered' ||
           sendError.code === 'messaging/invalid-registration-token'
         ) {
-          logger.info(`[FCM] Removing stale token...`);
-          await supabase.from('delivery_notification_tokens').delete().eq('fcm_token', fcmToken);
+          logger.info(`[FCM] Removing stale/invalid token from DB...`);
+          await supabase
+            .from('delivery_notification_tokens')
+            .delete()
+            .eq('fcm_token', fcmToken);
+          logger.info(`[FCM] Stale token removed`);
         }
       }
     }
 
+    logger.info(`[FCM] ─────────────────────────────────────────────────────`);
+    logger.info(`[FCM] Push summary: ${successCount} sent, ${failureCount} failed out of ${tokens.length} token(s)`);
+    logger.info(`[FCM] ======================================================`);
+
   } catch (error) {
-    logger.error(`[FCM] Unexpected error in sendPushNotification:`, error);
+    logger.error(`[FCM] ❌ Unexpected error in sendPushNotification:`, error);
   }
 };
 

@@ -361,16 +361,21 @@ const assignDeliveryPartner = async (orderId, deliveryPartnerId) => {
 
   if (error) throw createError(500, error.message);
 
-  // Trigger notification — wrapped in try/catch to not block core flow
+  // Trigger FCM push notification — fire-and-await wrapped so it never blocks the API response
+  // but errors ARE captured in logs.
   try {
-    sendPushNotification(
+    const shortId = String(orderId).split('-')[0].toUpperCase();
+    logger.info(`[assignDeliveryPartner] Triggering FCM push for order #${shortId} → partner ${deliveryPartnerId}`);
+    await sendPushNotification(
       deliveryPartnerId,
       orderId,
       'New Delivery Assigned',
-      `Order #${orderId} assigned to you`
+      `Order #${shortId} has been assigned to you`
     );
+    logger.info(`[assignDeliveryPartner] FCM push hook completed for order ${orderId}`);
   } catch (err) {
-    logger.error(`[assignDeliveryPartner] Notification hook failed:`, err);
+    // Push failure must never fail the assignment itself
+    logger.error(`[assignDeliveryPartner] FCM notification hook threw unexpectedly:`, err);
   }
 
   return data;
