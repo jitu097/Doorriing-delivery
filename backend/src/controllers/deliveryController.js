@@ -166,45 +166,60 @@ const saveDeliveryToken = async (req, res, next) => {
     }
 
     const supabase = getSupabaseClient();
+    const resolvedDeviceId = device_id || 'android';
+    const resolvedPlatform = platform  || 'android';
 
-    logger.info('[FCM_TOKEN] Performing safe replacement to avoid constraint issues...');
-
-    // 1. Delete any row that already has this exact token to prevent UNIQUE(fcm_token) violations
-    await supabase
+    // ── Step 1: Delete any row owned by a DIFFERENT partner that holds
+    //    this same FCM token. FCM tokens are globally unique — if another
+    //    partner's stale row carries this token it will block the upsert's
+    //    UNIQUE(fcm_token) constraint.
+    logger.info('[FCM_TOKEN] Step 1: Removing stale token rows from other partners (if any)...');
+    const { error: deleteStaleErr } = await supabase
       .from('delivery_notification_tokens')
       .delete()
-      .eq('fcm_token', token);
+      .eq('fcm_token', token)
+      .neq('delivery_partner_id', deliveryPartnerId);
 
-    // 2. Delete any row for this exact partner+device to prevent UNIQUE(device_id) violations
-    await supabase
-      .from('delivery_notification_tokens')
-      .delete()
-      .eq('delivery_partner_id', deliveryPartnerId)
-      .eq('device_id', device_id || 'android');
+    if (deleteStaleErr) {
+      logger.warn(`[FCM_TOKEN] Step 1 warning (non-fatal): ${deleteStaleErr.message}`);
+    } else {
+      logger.info('[FCM_TOKEN] Step 1 complete ✓');
+    }
 
-    // 3. Clean insert
+    // ── Step 2: UPSERT on conflict (delivery_partner_id, device_id)
+    //    • Row exists for this partner+device → UPDATE token + timestamps
+    //    • No row yet                         → INSERT fresh row
+    //    This is fully atomic — no race condition, no duplicate-key 500 errors
+    //    regardless of how many times the same device re-logs in.
+    logger.info(`[FCM_TOKEN] Step 2: UPSERT on (partner=${deliveryPartnerId}, device=${resolvedDeviceId})...`);
     const { data, error } = await supabase
       .from('delivery_notification_tokens')
-      .insert({
-        fcm_token:           token,
-        delivery_partner_id: deliveryPartnerId,
-        device_id:           device_id || 'android',
-        platform:            platform  || 'android',
-        role:                'delivery',
-        last_used_at:        new Date().toISOString()
-      })
+      .upsert(
+        {
+          fcm_token:           token,
+          delivery_partner_id: deliveryPartnerId,
+          device_id:           resolvedDeviceId,
+          platform:            resolvedPlatform,
+          role:                'delivery',
+          last_used_at:        new Date().toISOString()
+        },
+        {
+          onConflict:       'delivery_partner_id,device_id',
+          ignoreDuplicates: false   // false = UPDATE the existing row (not skip it)
+        }
+      )
       .select()
       .single();
 
     if (error) {
-      logger.error(`[FCM_TOKEN] DB UPSERT FAILED — code: ${error.code}`);
-      logger.error(`[FCM_TOKEN] DB UPSERT FAILED — message: ${error.message}`);
-      logger.error(`[FCM_TOKEN] DB UPSERT FAILED — details: ${error.details}`);
-      logger.error(`[FCM_TOKEN] DB UPSERT FAILED — hint: ${error.hint}`);
+      logger.error(`[FCM_TOKEN] UPSERT FAILED — code: ${error.code}`);
+      logger.error(`[FCM_TOKEN] UPSERT FAILED — message: ${error.message}`);
+      logger.error(`[FCM_TOKEN] UPSERT FAILED — details: ${error.details}`);
+      logger.error(`[FCM_TOKEN] UPSERT FAILED — hint: ${error.hint}`);
       throw createError(500, `Database error: ${error.message}`);
     }
 
-    logger.info(`[FCM_TOKEN] SUCCESS ✓ — token saved/updated for partner ${deliveryPartnerId}`);
+    logger.info(`[FCM_TOKEN] SUCCESS ✓ — token upserted for partner ${deliveryPartnerId}`);
     logger.info(`[FCM_TOKEN] DB row id: ${data?.id}`);
 
     return res.json({

@@ -2,12 +2,12 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { messaging, getToken, onMessage, VAPID_KEY, isConfigPlaceholder, isVapidPlaceholder } from '../config/firebase';
 import apiClient from '../services/apiClient';
 import { deliveryService } from '../services/deliveryService';
-import { useDeliveryAuthContext } from './DeliveryAuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 const NotificationContext = createContext(null);
 
 export const NotificationProvider = ({ children }) => {
-  const { courier } = useDeliveryAuthContext();
+  const { courier } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentIncomingOrder, setCurrentIncomingOrder] = useState(null);

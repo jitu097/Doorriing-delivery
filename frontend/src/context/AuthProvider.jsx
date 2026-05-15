@@ -40,6 +40,8 @@ function isTokenValid(token) {
 
 /**
  * Notify Android bridge after login (best-effort, never throws).
+ * 1. saveAuthToken — persists JWT in SharedPreferences
+ * 2. syncToken     — immediately sends any cached FCM token to the backend
  */
 function notifyAndroidLogin(token) {
   try {
@@ -47,8 +49,13 @@ function notifyAndroidLogin(token) {
       window.AndroidBridge.saveAuthToken(token);
       console.log('[LOGIN_PERSIST] AndroidBridge.saveAuthToken called ✓');
     }
+    // syncToken is a no-op if no FCM token is cached yet; harmless to call always
+    if (window.AndroidBridge && typeof window.AndroidBridge.syncToken === 'function') {
+      window.AndroidBridge.syncToken();
+      console.log('[LOGIN_PERSIST] AndroidBridge.syncToken called ✓');
+    }
   } catch (e) {
-    console.warn('[LOGIN_PERSIST] AndroidBridge.saveAuthToken error (non-fatal):', e);
+    console.warn('[LOGIN_PERSIST] AndroidBridge error (non-fatal):', e);
   }
 }
 
