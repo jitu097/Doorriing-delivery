@@ -75,91 +75,47 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
     }
 
     // -----------------------------------------------------------------------
-    // 4. Build FCM multicast message
-    //
-    // IMPORTANT Android specifics:
-    //   - android.priority = 'high'  → wakes device from Doze mode (critical!)
-    //   - data payload is included alongside notification so onMessageReceived
-    //     can read order_id and type even when app is killed.
-    //   - notification block ensures FCM generates a system tray notification
-    //     automatically when the app is in background/killed state.
+    // 4. Build and send FCM message for each token
     // -----------------------------------------------------------------------
-    const shortOrderId = orderId.split('-')[0].toUpperCase(); // e.g. "A1B2C3D4"
-
-    const message = {
-      tokens,
-      notification: {
-        title,
-        body
-      },
-      data: {
-        order_id: String(orderId),
-        type: 'NEW_ASSIGNMENT',
-        role: 'delivery',
-        // Echo title/body in data so onMessageReceived can always read them
-        title,
-        body
-      },
-      android: {
-        priority: 'high',                        // Wake device from Doze
+    for (const fcmToken of tokens) {
+      const message = {
+        token: fcmToken,
         notification: {
-          channelId: 'doorriing_delivery_channel', // Must match MyFirebaseMessagingService.CHANNEL_ID
-          priority: 'high',
-          defaultSound: true,
-          defaultVibrateTimings: true,
-          clickAction: 'FLUTTER_NOTIFICATION_CLICK' // optional, harmless if unused
-        }
-      }
-    };
-
-    // -----------------------------------------------------------------------
-    // 5. Send multicast and process results
-    // -----------------------------------------------------------------------
-    logger.info(`[FCM] Sending multicast to ${tokens.length} token(s) for order ${shortOrderId}...`);
-    const response = await admin.messaging().sendEachForMulticast(message);
-    logger.info(`[FCM] Result → success: ${response.successCount}, failure: ${response.failureCount}`);
-
-    // -----------------------------------------------------------------------
-    // 6. Clean up stale / invalid tokens
-    // -----------------------------------------------------------------------
-    if (response.failureCount > 0) {
-      const tokensToDelete = [];
-
-      response.responses.forEach((res, idx) => {
-        if (!res.success) {
-          const errorCode = res.error?.code || 'unknown';
-          logger.warn(`[FCM] Token[${idx}] failed: ${errorCode}`);
-
-          // These error codes mean the token is permanently invalid
-          const permanentErrors = [
-            'messaging/registration-token-not-registered',
-            'messaging/invalid-registration-token',
-            'messaging/invalid-argument'
-          ];
-
-          if (permanentErrors.includes(errorCode)) {
-            tokensToDelete.push(tokens[idx]);
+          title: "New Delivery Assigned",
+          body: "You have a new order delivery request"
+        },
+        android: {
+          priority: "high",
+          notification: {
+            sound: "default",
+            channelId: "delivery_notifications"
           }
+        },
+        data: {
+          type: "new_delivery",
+          order_id: String(orderId)
         }
-      });
+      };
 
-      if (tokensToDelete.length > 0) {
-        logger.info(`[FCM] Removing ${tokensToDelete.length} stale token(s)...`);
-        const { error: deleteError } = await supabase
-          .from('delivery_notification_tokens')
-          .delete()
-          .in('fcm_token', tokensToDelete);
-
-        if (deleteError) {
-          logger.error(`[FCM] Error deleting stale tokens:`, deleteError);
-        } else {
-          logger.info(`[FCM] Stale tokens removed successfully`);
+      try {
+        logger.info(`[FCM] Sending push to token: ${fcmToken.substring(0, 15)}...`);
+        const response = await admin.messaging().send(message);
+        logger.info(`[FCM] Successfully sent message: ${response}`);
+      } catch (sendError) {
+        logger.error(`[FCM] Error sending message to token ${fcmToken.substring(0, 15)}...:`, sendError);
+        
+        // Cleanup stale token if unregistered
+        if (
+          sendError.code === 'messaging/registration-token-not-registered' ||
+          sendError.code === 'messaging/invalid-registration-token'
+        ) {
+          logger.info(`[FCM] Removing stale token...`);
+          await supabase.from('delivery_notification_tokens').delete().eq('fcm_token', fcmToken);
         }
       }
     }
 
   } catch (error) {
-    // Never throw — push notification failure must not break the order assignment flow
     logger.error(`[FCM] Unexpected error in sendPushNotification:`, error);
   }
 };
