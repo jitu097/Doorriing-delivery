@@ -167,20 +167,32 @@ const saveDeliveryToken = async (req, res, next) => {
 
     const supabase = getSupabaseClient();
 
-    logger.info('[FCM_TOKEN] Upserting into delivery_notification_tokens...');
+    logger.info('[FCM_TOKEN] Performing safe replacement to avoid constraint issues...');
+
+    // 1. Delete any row that already has this exact token to prevent UNIQUE(fcm_token) violations
+    await supabase
+      .from('delivery_notification_tokens')
+      .delete()
+      .eq('fcm_token', token);
+
+    // 2. Delete any row for this exact partner+device to prevent UNIQUE(device_id) violations
+    await supabase
+      .from('delivery_notification_tokens')
+      .delete()
+      .eq('delivery_partner_id', deliveryPartnerId)
+      .eq('device_id', device_id || 'android');
+
+    // 3. Clean insert
     const { data, error } = await supabase
       .from('delivery_notification_tokens')
-      .upsert(
-        {
-          fcm_token:           token,
-          delivery_partner_id: deliveryPartnerId,
-          device_id:           device_id || 'android',
-          platform:            platform  || 'android',
-          role:                'delivery',
-          last_used_at:        new Date().toISOString()
-        },
-        { onConflict: 'device_id' }
-      )
+      .insert({
+        fcm_token:           token,
+        delivery_partner_id: deliveryPartnerId,
+        device_id:           device_id || 'android',
+        platform:            platform  || 'android',
+        role:                'delivery',
+        last_used_at:        new Date().toISOString()
+      })
       .select()
       .single();
 

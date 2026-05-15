@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { messaging, getToken, onMessage, VAPID_KEY, isConfigPlaceholder, isVapidPlaceholder } from '../config/firebase';
+import { messaging, getToken, onMessage, VAPID_KEY, isConfigPlaceholder, isVapidPlaceholder, isNativeApp } from '../config/firebase';
 import { supabase } from '../config/supabaseClient';
 import apiClient from '../services/apiClient';
 import { deliveryService } from '../services/deliveryService';
@@ -101,6 +101,11 @@ export const NotificationProvider = ({ children }) => {
   // FCM Setup
   useEffect(() => {
     if (!courier) return;
+
+    if (isNativeApp) {
+      console.log('[NotificationProvider] Native Android app detected. Skipping Web FCM initialization entirely.');
+      return;
+    }
 
     const setupFCM = async () => {
       try {

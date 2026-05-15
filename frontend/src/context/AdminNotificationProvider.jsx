@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { messaging, getToken, onMessage, VAPID_KEY, isConfigPlaceholder, isVapidPlaceholder } from '../config/firebase';
+import { messaging, getToken, onMessage, VAPID_KEY, isConfigPlaceholder, isVapidPlaceholder, isNativeApp } from '../config/firebase';
 import { adminService } from '../services/adminService';
 import { useAuth } from '../hooks/useAuth';
 

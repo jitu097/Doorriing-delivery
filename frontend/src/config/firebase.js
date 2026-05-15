@@ -12,7 +12,18 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const messaging = getMessaging(app);
+
+export const isNativeApp = typeof window !== 'undefined' && !!(window.Capacitor || window.AndroidBridge);
+
+export let messaging = null;
+
+if (!isNativeApp) {
+  try {
+    messaging = getMessaging(app);
+  } catch (e) {
+    console.warn('[Firebase] Messaging not supported or failed to initialize:', e);
+  }
+}
 
 // Check if config is still using placeholders
 export const isConfigPlaceholder = !firebaseConfig.apiKey || firebaseConfig.apiKey === 'YOUR_API_KEY';
