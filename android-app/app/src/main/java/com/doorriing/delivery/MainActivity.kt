@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
 
         // ─── URLs ───────────────────────────────────────────────────────────
         private const val ROOT_URL = "https://delivery.doorriing.com/"
+        private const val API_URL  = "https://doorriing-delivery-3.onrender.com/"
 
         // ─── SharedPreferences keys ─────────────────────────────────────────
         private const val PREFS_NAME           = "doorriing_prefs"
@@ -271,13 +272,13 @@ class MainActivity : AppCompatActivity() {
 
         Log.d(FCM_TAG, "sendTokenToBackend: JWT present ✓ (length=${authToken.length})")
         Log.d(FCM_TAG, "sendTokenToBackend: FCM token length=${fcmToken.length}")
-        Log.d(FCM_TAG, "sendTokenToBackend: Sending to → ${ROOT_URL}api/delivery/push-token")
+        Log.d(FCM_TAG, "sendTokenToBackend: Sending to → ${API_URL}api/delivery/push-token")
 
         val json = """{"token":"$fcmToken","device_id":"android","platform":"android"}"""
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
 
         val request = Request.Builder()
-            .url("${ROOT_URL}api/delivery/push-token")
+            .url("${API_URL}api/delivery/push-token")
             .addHeader("Authorization", "Bearer $authToken")
             .addHeader("Content-Type", "application/json")
             .post(body)
