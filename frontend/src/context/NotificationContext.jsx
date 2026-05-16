@@ -48,11 +48,6 @@ export const NotificationProvider = ({ children }) => {
     const setupFCM = async () => {
       console.log('[FCM] Initializing Firebase Messaging...');
       try {
-        if (!messaging) {
-          console.warn('[FCM] Firebase messaging not available - native app or initialization failed');
-          return;
-        }
-
         const permission = await Notification.requestPermission();
         console.log('[FCM] Permission status:', permission);
         if (permission !== 'granted') return;
@@ -87,10 +82,6 @@ export const NotificationProvider = ({ children }) => {
     setupFCM();
 
     // Foreground listener
-    if (!messaging) {
-      console.warn('[NotificationContext] Firebase messaging not initialized - skipping foreground listener');
-      return () => {};
-    }
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log('[NotificationContext] Foreground message received:', payload);
       

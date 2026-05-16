@@ -127,19 +127,19 @@ export const Login = () => {
           <button
             type="button"
             className="auth-demo-box"
-            onClick={() => { setEmail('admin@doorring.com'); setPassword('Admin@123'); }}
+            onClick={() => { setEmail('admin@doorriing.com'); setPassword('Admin@123'); }}
           >
             <p className="auth-demo-box__title">Admin Test <span className="auth-demo-box__hint">click to fill</span></p>
-            <p><span>Email:</span> admin@doorring.com</p>
+            <p><span>Email:</span> admin@doorriing.com</p>
             <p><span>Password:</span> Admin@123</p>
           </button>
           <button
             type="button"
             className="auth-demo-box"
-            onClick={() => { setEmail('delivery@doorring.com'); setPassword('Delivery@123'); }}
+            onClick={() => { setEmail('delivery@doorriing.com'); setPassword('Delivery@123'); }}
           >
             <p className="auth-demo-box__title">Delivery Test <span className="auth-demo-box__hint">click to fill</span></p>
-            <p><span>Email:</span> delivery@doorring.com</p>
+            <p><span>Email:</span> delivery@doorriing.com</p>
             <p><span>Password:</span> Delivery@123</p>
           </button>
         </div>
