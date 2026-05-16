@@ -13,51 +13,58 @@ import './Login.css';
 // registered by the JS engine in the first microtask after page load, but IS
 // available within the first 500 ms of the WebView lifetime.
 function sendJwtToAndroidBridge(token) {
-  console.log('[LOGIN_PERSIST] ══════════════════════════════════');
-  console.log('[LOGIN_PERSIST] sendJwtToAndroidBridge() called');
-  console.log('[LOGIN_PERSIST] token length:', token ? token.length : 'NULL/EMPTY');
+  return new Promise((resolve) => {
+    console.log('[LOGIN_PERSIST] ══════════════════════════════════');
+    console.log('[LOGIN_PERSIST] sendJwtToAndroidBridge() called');
+    console.log('[LOGIN_PERSIST] token length:', token ? token.length : 'NULL/EMPTY');
 
-  if (!token) {
-    console.error('[LOGIN_PERSIST] ❌ token is null/empty — skipping bridge call');
-    return;
-  }
+    if (!token) {
+      console.error('[LOGIN_PERSIST] ❌ token is null/empty — skipping bridge call');
+      resolve();
+      return;
+    }
 
-  // Attempt immediately
-  const attempt = (triesLeft) => {
-    console.log(`[LOGIN_PERSIST] Bridge attempt (tries left: ${triesLeft})`);
-    console.log('[LOGIN_PERSIST] typeof window.AndroidBridge:', typeof window.AndroidBridge);
-    console.log('[LOGIN_PERSIST] window.AndroidBridge value:', window.AndroidBridge);
+    // Attempt immediately
+    const attempt = (triesLeft) => {
+      console.log(`[LOGIN_PERSIST] Bridge attempt (tries left: ${triesLeft})`);
+      console.log('[LOGIN_PERSIST] typeof window.AndroidBridge:', typeof window.AndroidBridge);
+      console.log('[LOGIN_PERSIST] window.AndroidBridge value:', window.AndroidBridge);
 
-    if (window.AndroidBridge && typeof window.AndroidBridge.saveAuthToken === 'function') {
-      console.log('[LOGIN_PERSIST] ✓ AndroidBridge.saveAuthToken IS available — calling now');
-      window.AndroidBridge.saveAuthToken(token);
-      console.log('[LOGIN_PERSIST] ✓ saveAuthToken call dispatched');
+      if (window.AndroidBridge && typeof window.AndroidBridge.saveAuthToken === 'function') {
+        console.log('[LOGIN_PERSIST] ✓ AndroidBridge.saveAuthToken IS available — calling now');
+        window.AndroidBridge.saveAuthToken(token);
+        console.log('[LOGIN_PERSIST] ✓ saveAuthToken call dispatched');
 
-      // Also trigger syncToken so Android immediately re-sends any cached FCM token
-      if (typeof window.AndroidBridge.syncToken === 'function') {
-        console.log('[LOGIN_PERSIST] ✓ Calling AndroidBridge.syncToken()');
-        window.AndroidBridge.syncToken();
-        console.log('[LOGIN_PERSIST] ✓ syncToken call dispatched');
-      } else {
-        console.warn('[LOGIN_PERSIST] ⚠ AndroidBridge.syncToken not available (non-fatal)');
+        // Also trigger syncToken so Android immediately re-sends any cached FCM token
+        if (typeof window.AndroidBridge.syncToken === 'function') {
+          console.log('[LOGIN_PERSIST] ✓ Calling AndroidBridge.syncToken()');
+          window.AndroidBridge.syncToken();
+          console.log('[LOGIN_PERSIST] ✓ syncToken call dispatched');
+        } else {
+          console.warn('[LOGIN_PERSIST] ⚠ AndroidBridge.syncToken not available (non-fatal)');
+        }
+        console.log('[LOGIN_PERSIST] ══════════════════════════════════');
+        
+        // Wait an extra 100ms before resolving to ensure Android has processed the synchronous calls
+        setTimeout(resolve, 100);
+        return; // success
       }
-      console.log('[LOGIN_PERSIST] ══════════════════════════════════');
-      return; // success
-    }
 
-    // Bridge not ready yet
-    console.warn('[LOGIN_PERSIST] ⚠ AndroidBridge not available on this attempt');
-    if (triesLeft > 0) {
-      console.log(`[LOGIN_PERSIST] Retrying in 300ms...`);
-      setTimeout(() => attempt(triesLeft - 1), 300);
-    } else {
-      console.error('[LOGIN_PERSIST] ❌ AndroidBridge.saveAuthToken NOT found after all retries');
-      console.error('[LOGIN_PERSIST] Running in browser (no Android) OR addJavascriptInterface not called');
-      console.log('[LOGIN_PERSIST] ══════════════════════════════════');
-    }
-  };
+      // Bridge not ready yet
+      console.warn('[LOGIN_PERSIST] ⚠ AndroidBridge not available on this attempt');
+      if (triesLeft > 0) {
+        console.log(`[LOGIN_PERSIST] Retrying in 300ms...`);
+        setTimeout(() => attempt(triesLeft - 1), 300);
+      } else {
+        console.error('[LOGIN_PERSIST] ❌ AndroidBridge.saveAuthToken NOT found after all retries');
+        console.error('[LOGIN_PERSIST] Running in browser (no Android) OR addJavascriptInterface not called');
+        console.log('[LOGIN_PERSIST] ══════════════════════════════════');
+        resolve();
+      }
+    };
 
-  attempt(3); // try up to 4 times (immediate + 3 retries × 300 ms = up to 900 ms total)
+    attempt(3); // try up to 4 times (immediate + 3 retries × 300 ms = up to 900 ms total)
+  });
 }
 
 export const Login = () => {
@@ -84,7 +91,7 @@ export const Login = () => {
       // ── CRITICAL: Pass JWT to native Android bridge ──────────────────
       const storedToken = localStorage.getItem('bz_delivery_token');
       console.log('[LOGIN_PERSIST] JWT from localStorage:', storedToken ? `present (${storedToken.length} chars)` : 'MISSING');
-      sendJwtToAndroidBridge(storedToken);
+      await sendJwtToAndroidBridge(storedToken);
       // ─────────────────────────────────────────────────────────────────
 
       navigate(ROUTES.delivery.dashboard);
@@ -101,7 +108,7 @@ export const Login = () => {
       // As a fallback, if an admin logs in via the Android App, try to pass the token anyway
       // (though FCM push is mainly for delivery partners, this ensures no null states)
       const storedToken = localStorage.getItem('bz_admin_token');
-      sendJwtToAndroidBridge(storedToken);
+      await sendJwtToAndroidBridge(storedToken);
 
       navigate(ROUTES.admin.dashboard);
       return;

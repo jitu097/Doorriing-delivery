@@ -156,10 +156,14 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem(storageKey, token);
       console.log(`[LOGIN_PERSIST] Token saved — role=${role}`);
 
-      setUser({ ...userData, role, token });
-
       // Notify Android native bridge so it can register the FCM token
       notifyAndroidLogin(token);
+
+      // Wait a tiny bit (150ms) to ensure the Android bridge synchronous calls are finished
+      // and processed before we trigger the React state change which unmounts the Login page.
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      setUser({ ...userData, role, token });
 
       return { success: true, role };
     } catch (err) {
