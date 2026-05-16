@@ -74,28 +74,14 @@ export const Login = () => {
     clearAuthError();
     setGenericError('');
 
-    console.log('[LOGIN_PERSIST] ── handleSubmit: trying admin login first');
+    console.log('[LOGIN_PERSIST] ── handleSubmit: trying delivery login first');
 
-    // Step 1: Try admin login
-    const adminRes = await login({ email, password, type: 'admin' });
-    if (adminRes.success) {
-      console.log('[LOGIN_PERSIST] Admin login success — navigating to admin dashboard');
-      navigate(ROUTES.admin.dashboard);
-      return;
-    }
-
-    console.log('[LOGIN_PERSIST] ── Admin login failed — trying delivery login');
-
-    // Step 2: Try delivery login
+    // Step 1: Try delivery login FIRST
     const deliveryRes = await login({ email, password, type: 'delivery' });
     if (deliveryRes.success) {
       console.log('[LOGIN_PERSIST] ✓ Delivery login SUCCESS');
 
       // ── CRITICAL: Pass JWT to native Android bridge ──────────────────
-      // AuthProvider.login() already stored the token in localStorage AND
-      // called notifyAndroidLogin(). We call sendJwtToAndroidBridge() here
-      // ADDITIONALLY as a direct call with full diagnostic logging so we
-      // can confirm the bridge is reachable from this exact execution point.
       const storedToken = localStorage.getItem('bz_delivery_token');
       console.log('[LOGIN_PERSIST] JWT from localStorage:', storedToken ? `present (${storedToken.length} chars)` : 'MISSING');
       sendJwtToAndroidBridge(storedToken);
@@ -105,8 +91,24 @@ export const Login = () => {
       return;
     }
 
+    console.log('[LOGIN_PERSIST] ── Delivery login failed — trying admin login');
+
+    // Step 2: Try admin login
+    const adminRes = await login({ email, password, type: 'admin' });
+    if (adminRes.success) {
+      console.log('[LOGIN_PERSIST] Admin login success — navigating to admin dashboard');
+      
+      // As a fallback, if an admin logs in via the Android App, try to pass the token anyway
+      // (though FCM push is mainly for delivery partners, this ensures no null states)
+      const storedToken = localStorage.getItem('bz_admin_token');
+      sendJwtToAndroidBridge(storedToken);
+
+      navigate(ROUTES.admin.dashboard);
+      return;
+    }
+
     // Both failed
-    console.warn('[LOGIN_PERSIST] Both admin and delivery login failed');
+    console.warn('[LOGIN_PERSIST] Both delivery and admin login failed');
     setGenericError('Invalid credentials or account not found.');
   };
 

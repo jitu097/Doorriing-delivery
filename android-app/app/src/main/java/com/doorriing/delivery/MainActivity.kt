@@ -46,12 +46,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private val httpClient = OkHttpClient()
 
-    // Guard: prevents duplicate permission dialogs when Activity restarts
-    // (rotation, system kill/recreate) while first dialog is still open.
-    // "Can request only one set of permissions at a time" error is caused by
-    // calling requestPermissions() a second time before the first resolves.
-    private var permissionRequested = false
-
     // =========================================================================
     // onCreate
     // =========================================================================
@@ -147,8 +141,11 @@ class MainActivity : AppCompatActivity() {
                                         typeof window.AndroidBridge.saveAuthToken === 'function') {
                                     console.log('[JWT_POLL] Token found (len=' + token.length + ') — calling saveAuthToken');
                                     window.AndroidBridge.saveAuthToken(token);
+                                    if (typeof window.AndroidBridge.syncToken === 'function') {
+                                        window.AndroidBridge.syncToken();
+                                    }
                                     lastSent = token;
-                                    console.log('[JWT_POLL] saveAuthToken dispatched ✓');
+                                    console.log('[JWT_POLL] saveAuthToken and syncToken dispatched ✓');
                                 } else {
                                     console.warn('[JWT_POLL] AndroidBridge not ready yet — will retry');
                                 }
@@ -171,9 +168,6 @@ class MainActivity : AppCompatActivity() {
 
         // ── Step 3: handle notification deep link / load root URL ────────
         handleIntent(intent)
-
-        // ── Step 4: fetch & cache FCM token ──────────────────────────────
-        fetchFcmToken()
     }
 
     // =========================================================================
@@ -352,25 +346,21 @@ class MainActivity : AppCompatActivity() {
 
     // =========================================================================
     // Android 13+ runtime notification permission — requested ONCE only
-    // Uses simple requestPermissions() with result in onRequestPermissionsResult
     // =========================================================================
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                    == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED) {
                 Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Already granted ✓")
-                return
+            } else {
+                Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Requesting...")
+                requestPermissions(
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    PERM_REQUEST_CODE
+                )
             }
-            if (permissionRequested) {
-                Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Already requested — skipping duplicate")
-                return
-            }
-            permissionRequested = true
-            Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Requesting (Android 13+ / API ${Build.VERSION.SDK_INT})")
-            requestPermissions(
-                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                PERM_REQUEST_CODE
-            )
         } else {
             Log.d(FCM_TAG, "NOTIFICATION_PERMISSION: Not required on Android < 13 — auto-granted ✓")
         }
