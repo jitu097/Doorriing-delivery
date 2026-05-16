@@ -27,6 +27,7 @@
     <uses-permission android:name="com.doorriing.delivery.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 
     <application
+        android:name="com.doorriing.delivery.DoorriingDeliveryApp"
         android:allowBackup="true"
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:debuggable="true"
