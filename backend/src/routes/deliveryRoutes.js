@@ -84,4 +84,17 @@ router.patch('/notifications/:id/read', deliveryController.markAsRead);
 // PATCH /api/delivery/notifications/read-all
 router.patch('/notifications/read-all', deliveryController.markAllRead);
 
+// ─── FCM Diagnostics ─────────────────────────────────────────────────────────
+// GET  /api/delivery/push-token/status
+// Returns all FCM tokens currently registered for the logged-in delivery partner.
+// Use this to verify the token was saved correctly after login.
+router.get('/push-token/status', deliveryController.getTokenStatus);
+
+// POST /api/delivery/test-push
+// Fires a REAL FCM push to the logged-in delivery partner for end-to-end testing.
+// No order assignment needed — use this to confirm the full FCM pipeline works.
+router.post('/test-push', deliveryController.sendTestPush);
+// ─────────────────────────────────────────────────────────────────────────────
+
 module.exports = router;
+

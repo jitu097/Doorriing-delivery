@@ -115,9 +115,14 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
           }
         },
         data: {
+          // ⚠️  ALL values in FCM data payload MUST be strings
+          // Duplicate title/body in data so onMessageReceived() can read them
+          // even when the system handles the notification tray display.
           type:         'NEW_ASSIGNMENT',
           order_id:     String(orderId),
-          click_action: 'OPEN_DELIVERY_APP'
+          click_action: 'OPEN_DELIVERY_APP',
+          title:        notifTitle,
+          body:         notifBody
         }
       };
 

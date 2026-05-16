@@ -315,6 +315,83 @@ const markAllRead = async (req, res, next) => {
   }
 };
 
+// ─── FCM Diagnostics ─────────────────────────────────────────────────────────
+
+// GET /api/delivery/push-token/status
+// Returns all FCM tokens currently registered for this delivery partner.
+// Critical for debugging: verify token was saved AFTER login.
+const getTokenStatus = async (req, res, next) => {
+  try {
+    const deliveryPartnerId = req.deliveryPartner?.id;
+    logger.info(`[FCM_DIAG] GET /push-token/status for partner ${deliveryPartnerId}`);
+
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('delivery_notification_tokens')
+      .select('id, fcm_token, device_id, platform, role, last_used_at, created_at')
+      .eq('delivery_partner_id', deliveryPartnerId);
+
+    if (error) {
+      logger.error(`[FCM_DIAG] DB error: ${error.message}`);
+      return next(error);
+    }
+
+    logger.info(`[FCM_DIAG] Found ${data?.length || 0} token(s) for partner ${deliveryPartnerId}`);
+
+    return res.json({
+      success: true,
+      data: {
+        delivery_partner_id: deliveryPartnerId,
+        token_count: data?.length || 0,
+        tokens: (data || []).map(t => ({
+          id: t.id,
+          device_id: t.device_id,
+          platform: t.platform,
+          role: t.role,
+          token_preview: t.fcm_token ? `${t.fcm_token.substring(0, 20)}...` : 'NULL',
+          last_used_at: t.last_used_at,
+          created_at: t.created_at
+        }))
+      },
+      message: data?.length > 0
+        ? `✅ ${data.length} FCM token(s) registered — push notifications WILL work`
+        : '❌ No FCM tokens registered — push notifications will NOT work. Open the Android app and login first.'
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// POST /api/delivery/test-push
+// Fires a real FCM push notification to the logged-in delivery partner.
+// Use to verify the complete push pipeline without needing an order assignment.
+const sendTestPush = async (req, res, next) => {
+  try {
+    const deliveryPartnerId = req.deliveryPartner?.id;
+    logger.info(`[FCM_DIAG] POST /test-push for partner ${deliveryPartnerId}`);
+
+    const { sendPushNotification } = require('../services/deliveryNotificationService');
+    const testOrderId = 'test-' + Date.now();
+
+    await sendPushNotification(
+      deliveryPartnerId,
+      testOrderId,
+      '🔔 Test Notification',
+      'FCM push pipeline is working correctly!'
+    );
+
+    return res.json({
+      success: true,
+      message: `Test push notification sent to partner ${deliveryPartnerId}. Check your Android device notification tray and backend logs.`,
+      data: { delivery_partner_id: deliveryPartnerId, test_order_id: testOrderId }
+    });
+  } catch (err) {
+    logger.error(`[FCM_DIAG] sendTestPush error: ${err.message}`);
+    return next(err);
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 module.exports = {
   login,
   getAssignedOrders,
@@ -333,4 +410,7 @@ module.exports = {
   getUnreadCount,
   markAsRead,
   markAllRead,
+  getTokenStatus,
+  sendTestPush,
 };
+

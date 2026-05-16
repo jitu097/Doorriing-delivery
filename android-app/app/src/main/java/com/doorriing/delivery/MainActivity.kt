@@ -187,6 +187,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================================
+    // onResume — retry token sync in case it failed on first attempt
+    // (e.g. network unavailable during onCreate, or JWT arrived after FCM token)
+    // =========================================================================
+    override fun onResume() {
+        super.onResume()
+        val prefs     = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val authToken = prefs.getString(KEY_AUTH_TOKEN, null)
+        val fcmToken  = prefs.getString(KEY_FCM_TOKEN, null)
+
+        if (!authToken.isNullOrBlank() && !fcmToken.isNullOrBlank()) {
+            Log.d(FCM_TAG, "onResume: JWT + FCM both present — retrying backend sync")
+            sendTokenToBackend(fcmToken)
+        } else {
+            Log.d(FCM_TAG, "onResume: JWT=${if(authToken.isNullOrBlank()) "MISSING" else "present"} FCM=${if(fcmToken.isNullOrBlank()) "MISSING" else "present"} — skipping retry")
+        }
+    }
+
+    // =========================================================================
     // onRequestPermissionsResult — permission dialog result callback
     // =========================================================================
     override fun onRequestPermissionsResult(
@@ -375,14 +393,18 @@ class MainActivity : AppCompatActivity() {
             prefs.edit().putString(KEY_AUTH_TOKEN, token).apply()
             Log.i(FCM_TAG, "AndroidBridge.saveAuthToken: JWT saved to SharedPreferences ✓")
 
+            // Always fetch fresh FCM token from Firebase and sync to backend.
+            // Using fetchFcmToken() ensures:
+            //  1. We always have the LATEST token (not a potentially stale cache)
+            //  2. sendTokenToBackend() inside fetchFcmToken() uses the JWT we just saved
             val cachedFcmToken = prefs.getString(KEY_FCM_TOKEN, null)
             if (!cachedFcmToken.isNullOrBlank()) {
-                Log.i(FCM_TAG, "AndroidBridge.saveAuthToken: Cached FCM token found — sending to backend NOW")
+                Log.i(FCM_TAG, "AndroidBridge.saveAuthToken: Cached FCM token found — syncing to backend immediately")
                 sendTokenToBackend(cachedFcmToken)
-            } else {
-                Log.d(FCM_TAG, "AndroidBridge.saveAuthToken: No cached FCM token — fetching from Firebase")
-                fetchFcmToken()
             }
+            // Always also request a fresh token to guarantee latest
+            Log.d(FCM_TAG, "AndroidBridge.saveAuthToken: Requesting fresh FCM token from Firebase")
+            fetchFcmToken()
         }
 
         @JavascriptInterface

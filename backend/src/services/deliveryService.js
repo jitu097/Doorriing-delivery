@@ -27,12 +27,24 @@ const login = async ({ email, password }) => {
   const { env } = require('../config/env');
 
   // --- Temporary hardcoded delivery partner (remove before production) ---
+  // ⚠️  IMPORTANT: TEMP_ID is a fake UUID that does NOT exist in delivery_partners.
+  //    FCM push notifications will NOT work for this test account because:
+  //    1. FCM tokens are saved in delivery_notification_tokens with delivery_partner_id = TEMP_ID
+  //    2. assignDeliveryPartner() calls sendPushNotification(realPartnerId, ...) — not TEMP_ID
+  //    3. The token lookup by deliveryPartnerId finds 0 rows → no push sent
+  //
+  //    To properly test push notifications, create a real delivery partner via:
+  //    POST /api/admin/delivery-partners  { name, email, phone, password, vehicle_type }
+  //    Then login with those credentials in the Android app.
   const TEMP_ID = '00000000-0000-0000-0000-000000000000';
   if (
     env.TEMP_DELIVERY_EMAIL &&
     email === env.TEMP_DELIVERY_EMAIL &&
     password === env.TEMP_DELIVERY_PASSWORD
   ) {
+    const { logger } = require('../utils/logger');
+    logger.warn(`[DELIVERY_LOGIN] ⚠️  Temp account login detected (${email}). FCM push notifications will NOT work for this account.`);
+    logger.warn(`[DELIVERY_LOGIN] ⚠️  Use a real delivery partner account for push notification testing.`);
     const token = signToken({ id: TEMP_ID, email, role: 'delivery' });
     return { token, partner: { id: TEMP_ID, name: 'Test Rider', email, role: 'delivery', delivery_status: 'online' } };
   }

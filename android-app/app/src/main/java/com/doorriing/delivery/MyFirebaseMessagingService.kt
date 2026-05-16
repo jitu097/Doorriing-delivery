@@ -29,7 +29,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         private const val CHANNEL_NAME = "Delivery Alerts"
         private const val CHANNEL_DESC = "High-priority notifications for new delivery assignments"
 
-        private const val BASE_URL   = "https://delivery.doorriing.com/"
+        // ⚠️  MUST match MainActivity.API_URL — this is the BACKEND, not the web frontend
+        private const val API_URL    = "https://doorriing-delivery-3.onrender.com/"
         private const val PREFS_NAME = "doorriing_prefs"
 
         private const val KEY_AUTH_TOKEN = "auth_token"
@@ -79,18 +80,24 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
 
         Log.d(FCM_TAG, "─────────────────────────────────────────")
-        Log.d(FCM_TAG, "onMessageReceived: PUSH RECEIVED ✓")
+        Log.d(FCM_TAG, "onMessageReceived: ✅ PUSH RECEIVED")
         Log.d(FCM_TAG, "onMessageReceived: from         = ${remoteMessage.from}")
         Log.d(FCM_TAG, "onMessageReceived: messageId    = ${remoteMessage.messageId}")
         Log.d(FCM_TAG, "onMessageReceived: notification = ${remoteMessage.notification?.title} / ${remoteMessage.notification?.body}")
-        Log.d(FCM_TAG, "onMessageReceived: data         = ${remoteMessage.data}")
+        Log.d(FCM_TAG, "onMessageReceived: data keys    = ${remoteMessage.data.keys}")
+        Log.d(FCM_TAG, "onMessageReceived: data values  = ${remoteMessage.data}")
 
-        val title   = remoteMessage.notification?.title   ?: remoteMessage.data["title"]   ?: "New Delivery Order"
-        val body    = remoteMessage.notification?.body    ?: remoteMessage.data["body"]    ?: "You have a new delivery assignment"
+        // Prefer data fields first — data-only messages work in ALL app states
+        // (foreground, background, AND killed). Notification-only messages are
+        // auto-displayed by the system tray when app is in background/killed,
+        // so onMessageReceived is only called for them when app is FOREGROUND.
+        val title   = remoteMessage.data["title"]   ?: remoteMessage.notification?.title   ?: "New Delivery Order"
+        val body    = remoteMessage.data["body"]    ?: remoteMessage.notification?.body    ?: "You have a new delivery assignment"
         val orderId = remoteMessage.data["order_id"]
         val type    = remoteMessage.data["type"]
 
-        Log.i(FCM_TAG, "onMessageReceived: Showing notification → title='$title' body='$body'")
+        Log.i(FCM_TAG, "onMessageReceived: title='$title' body='$body' orderId=$orderId type=$type")
+        Log.i(FCM_TAG, "onMessageReceived: Posting notification to system tray...")
 
         showNotification(title, body, orderId, type)
     }
@@ -153,14 +160,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     // Send token to backend — called from onNewToken()
     // =========================================================================
     private fun syncTokenToBackend(fcmToken: String, authToken: String) {
-        Log.d(FCM_TAG, "syncTokenToBackend: Sending token to → ${BASE_URL}api/delivery/push-token")
+        Log.d(FCM_TAG, "syncTokenToBackend: Sending token to → ${API_URL}api/delivery/push-token")
         Log.d(FCM_TAG, "syncTokenToBackend: JWT present ✓ (length=${authToken.length})")
 
         val json = """{"token":"$fcmToken","device_id":"android","platform":"android"}"""
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
 
         val request = Request.Builder()
-            .url("${BASE_URL}api/delivery/push-token")
+            .url("${API_URL}api/delivery/push-token")
             .addHeader("Authorization", "Bearer $authToken")
             .addHeader("Content-Type", "application/json")
             .post(body)
