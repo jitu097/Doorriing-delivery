@@ -127,18 +127,22 @@ const sendPushNotification = async (deliveryPartnerId, orderId, title, body) => 
       };
 
       logger.info(`[FCM] ➤ Sending push to token: ${fcmToken.substring(0, 20)}...`);
+      console.log("FCM TOKEN FOUND:", fcmToken);
+      console.log("FCM PAYLOAD:", JSON.stringify(message, null, 2));
 
       try {
         // Use getMessaging() so we use the same initialised Firebase app instance
         const messaging = getMessaging();
         const response = await messaging.send(message);
         logger.info(`[FCM] ✅ Push sent successfully! Message ID: ${response}`);
+        console.log("FCM SEND RESPONSE:", response);
         successCount++;
       } catch (sendError) {
         failureCount++;
         logger.error(`[FCM] ❌ Failed to send push to token ${fcmToken.substring(0, 20)}...`);
         logger.error(`[FCM]   Error code    : ${sendError.code}`);
         logger.error(`[FCM]   Error message : ${sendError.message}`);
+        console.error("FCM SEND ERROR:", sendError);
 
         // Remove stale tokens automatically
         if (
